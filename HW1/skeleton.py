@@ -194,7 +194,7 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
     generalized = ctr_anon - ctr_raw
     lost = ctr_raw - ctr_anon
     ctr_anon.subtract(ctr_raw)
-    print(ctr_anon)
+    # print(ctr_anon)
     # print("generalized:\n", generalized)
     # print("lost:\n", lost)
 
@@ -211,26 +211,17 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
         list_dgh.append(dgh)
         list_tree.append(tree)
     tree1 = Tree()
-    print(list)
+    # print(list)
     for (i,j),k in ctr_anon.items():
         if k != 0:
-            print("i", i)
-            print("j",j)
-            print("k",k)
+            # print("i", i)
+            # print("j",j)
+            # print("k",k)
             if k < 0:
                 # Get the corresponding tree
                 index = list_dgh.index(i)
                 tree1 = list_tree[index]
-                print(tree1)
-                root = tree1.get_node("root")
-                # current = tree1.subtree(str(j))
                 current = tree1.get_node(j)
-                print(current)
-                j_temp = j
-                # for (key1,key2), value in ctr_anon.items():
-                #     if k < 0:
-                #         if key == i:
-                #             j_wanted = value
                 level_of_the_deepest = current.data - 1
                 # Get the hierarchical parent until the j_wanted is equal to create a (i,j) pair that is in the ctr_anon dict.
                 j_wanted = ""
@@ -238,40 +229,18 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
                     parent = tree1.parent(current.identifier)
                     current = parent
                     j_wanted = current.identifier
-                    print(parent)
-                    print(ctr_anon)
                     # j_temp -= 1
                 ctr_anon[(i,j_wanted)] += k
                 ctr_anon[(i,j)] -= k
                 # k represents the every to be deleted data. So it needs to be multiplied.
-                print(ctr_anon)
+                # print(ctr_anon)
                 level_of_farthest = current.data
                 MD = (level_of_the_deepest - level_of_farthest) * abs(k)
                 print(MD)
                 total_MD_cost += MD
 
             elif k > 0:
-
                 pass
-                # while
-                # for l in
-                #     ctr_anon.get((i,))
-
-    # for (i,j),k in lost.items():
-    #     print("i",i)
-    #     print("j",j)
-    #     print("k",k)
-    #     # if list[i] == 'gender':
-    #     #     print(1)
-    #     if generalized[(i,)]:
-    #         print(1)
-
-        # print(generalized.keys())
-
-
-
-            # print(dgh)
-            # print(tree)
 
     print(total_MD_cost)
     return total_MD_cost
