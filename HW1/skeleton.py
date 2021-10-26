@@ -7,8 +7,8 @@ import csv
 import glob
 import os
 import sys
-import numpy as np
 from treelib import Node, Tree
+from collections import Counter
 
 from copy import deepcopy
 from typing import Optional
@@ -92,8 +92,7 @@ def read_DGH(DGH_file: str):
     Args:
         DGH_file (str): the path to DGH file.
     """
-    #TODO: complete this code so that a DGH file is read and returned
-    # in your own desired format.
+    # Returned in a tree structure
 
     result = []
     with open(DGH_file) as f:
@@ -106,8 +105,6 @@ def read_DGH(DGH_file: str):
     parent = tree.create_node(result[0][0],"root", data=0)
     root = parent
 
-    # tree.show()
-    # for res in range(len(result)):
     i = 0
     total_children += 1
     indentation_level = 0
@@ -117,6 +114,7 @@ def read_DGH(DGH_file: str):
         else:
             indentation_level = len(c)
             # print(indentation_level)
+        # Top down
         if i!= 0:
             if parent.is_root():
                 parent = tree.create_node(result[i][1], parent=root, data=indentation_level)
@@ -124,27 +122,16 @@ def read_DGH(DGH_file: str):
                 if indentation_level > parent.data:
                     parent = tree.create_node(result[i][indentation_level-1], parent=parent, data=indentation_level)
                 else:
-                    # parent = root
                     if parent.data:
+                        # Bottom up
                         while indentation_level <= parent.data:
-                            # indentation_level -= 1
                             parent = tree.parent(parent.identifier)
-                        # indentation_level = 0
-                        # parent = root.predecessor()
                         parent = tree.create_node(result[i][indentation_level-1], parent=parent,data = indentation_level)
-                        # parent = s0
 
         i += 1
 
 
-    tree.show()
-    #
-    # print(RenderTree(root1))
-        # for c in out:
-        #     if c != '':
-        #         print(c)
-        # print(result[res])
-    # root = AnyNode(id=result[0])
+    # tree.show()
     result = tree
     return result
 
@@ -192,6 +179,50 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
     DGHs = read_DGHs(DGH_folder)
 
     #TODO: complete this function.
+    # print(DGHs)
+    ctr_raw = Counter()
+    for data in raw_dataset:
+        for df, sa in data.items():
+            ctr_raw[(df,sa)] += 1
+    # print(ctr_raw)
+
+    ctr_anon = Counter()
+    for data in anonymized_dataset:
+        for df, sa in data.items():
+            ctr_anon[(df,sa)] += 1
+    # print(ctr_anon)
+    generalized = ctr_anon - ctr_raw
+    lost = ctr_raw - ctr_anon
+    print("generalized:\n", generalized)
+    print("lost:\n", lost)
+
+    # for j, k in generalized.keys():
+    #     print("j", j)
+    #     print("k", k)
+    #     print(lost.keys())
+    list = []
+    for key in generalized.keys():
+        list.append(key)
+
+    print(list)
+    for (i,j),k in lost.items():
+        print("i",i)
+        print("j",j)
+        print("k",k)
+        # if list[i] == 'gender':
+        #     print(1)
+        if generalized[(i,)]:
+            print(1)
+
+        # print(generalized.keys())
+
+
+        for dgh,tree in DGHs.items():
+            pass
+            # print(dgh)
+            # print(tree)
+
+
     return -1
 
 
@@ -273,7 +304,8 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
     write_dataset(anonymized_dataset, output_file)
 
-print(read_DGHs("DGHs"))
+# print(read_DGHs("DGHs"))
+cost_MD("adult-hw1.csv","adult-anonymized.csv", "DGHs" )
 
 # Command line argument handling and calling of respective anonymizer:
 if len(sys.argv) < 6:
