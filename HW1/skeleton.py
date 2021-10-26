@@ -102,9 +102,8 @@ def read_DGH(DGH_file: str):
 
     tree = Tree()
     total_children = 1
-    parent = tree.create_node(result[0][0],"root", data=0)
+    parent = tree.create_node(result[0][0],"Any", data=0)
     root = parent
-
     i = 0
     total_children += 1
     indentation_level = 0
@@ -117,16 +116,16 @@ def read_DGH(DGH_file: str):
         # Top down
         if i!= 0:
             if parent.is_root():
-                parent = tree.create_node(result[i][1], parent=root, data=indentation_level)
+                parent = tree.create_node(result[i][1].rstrip(),identifier=result[i][1].rstrip(), parent=root, data=indentation_level)
             else:
                 if indentation_level > parent.data:
-                    parent = tree.create_node(result[i][indentation_level-1], parent=parent, data=indentation_level)
+                    parent = tree.create_node(result[i][indentation_level-1].rstrip(),identifier=result[i][indentation_level-1].rstrip(), parent=parent, data=indentation_level)
                 else:
                     if parent.data:
                         # Bottom up
                         while indentation_level <= parent.data:
                             parent = tree.parent(parent.identifier)
-                        parent = tree.create_node(result[i][indentation_level-1], parent=parent,data = indentation_level)
+                        parent = tree.create_node(result[i][indentation_level-1].rstrip(),identifier=result[i][indentation_level-1].rstrip(), parent=parent,data = indentation_level)
 
         i += 1
 
@@ -193,8 +192,10 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
     # print(ctr_anon)
     generalized = ctr_anon - ctr_raw
     lost = ctr_raw - ctr_anon
-    print("generalized:\n", generalized)
-    print("lost:\n", lost)
+    ctr_anon.subtract(ctr_raw)
+    print(ctr_anon)
+    # print("generalized:\n", generalized)
+    # print("lost:\n", lost)
 
     # for j, k in generalized.keys():
     #     print("j", j)
@@ -203,22 +204,47 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
     list = []
     for key in generalized.keys():
         list.append(key)
-
+    list_dgh = []
+    list_tree = []
+    for dgh, tree in DGHs.items():
+        list_dgh.append(dgh)
+        list_tree.append(tree)
+    tree1 = Tree()
     print(list)
-    for (i,j),k in lost.items():
-        print("i",i)
-        print("j",j)
-        print("k",k)
-        # if list[i] == 'gender':
-        #     print(1)
-        if generalized[(i,)]:
-            print(1)
+    for (i,j),k in ctr_anon.items():
+        if k != 0:
+            print("i", i)
+            print("j",j)
+            print("k",k)
+            if k < 0:
+                # Get the corresponding tree
+                index = list_dgh.index(i)
+                tree1 = list_tree[index]
+                print(tree1)
+                root = tree1.get_node("root")
+                # current = tree1.subtree(str(j))
+                current = tree1.get_node(j)
+                print(current)
+                # while
+                parent = tree1.parent(current.identifier)
+                print(parent)
+                # while
+                # for l in
+                #     ctr_anon.get((i,))
+
+    # for (i,j),k in lost.items():
+    #     print("i",i)
+    #     print("j",j)
+    #     print("k",k)
+    #     # if list[i] == 'gender':
+    #     #     print(1)
+    #     if generalized[(i,)]:
+    #         print(1)
 
         # print(generalized.keys())
 
 
-        for dgh,tree in DGHs.items():
-            pass
+
             # print(dgh)
             # print(tree)
 
