@@ -179,6 +179,7 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
 
     #TODO: complete this function.
     # print(DGHs)
+    total_MD_cost = 0
     ctr_raw = Counter()
     for data in raw_dataset:
         for df, sa in data.items():
@@ -225,9 +226,33 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
                 # current = tree1.subtree(str(j))
                 current = tree1.get_node(j)
                 print(current)
-                # while
-                parent = tree1.parent(current.identifier)
-                print(parent)
+                j_temp = j
+                # for (key1,key2), value in ctr_anon.items():
+                #     if k < 0:
+                #         if key == i:
+                #             j_wanted = value
+                level_of_the_deepest = current.data - 1
+                # Get the hierarchical parent until the j_wanted is equal to create a (i,j) pair that is in the ctr_anon dict.
+                j_wanted = ""
+                while not ctr_anon.get((i,j_wanted)):
+                    parent = tree1.parent(current.identifier)
+                    current = parent
+                    j_wanted = current.identifier
+                    print(parent)
+                    print(ctr_anon)
+                    # j_temp -= 1
+                ctr_anon[(i,j_wanted)] += k
+                ctr_anon[(i,j)] -= k
+                # k represents the every to be deleted data. So it needs to be multiplied.
+                print(ctr_anon)
+                level_of_farthest = current.data
+                MD = (level_of_the_deepest - level_of_farthest) * abs(k)
+                print(MD)
+                total_MD_cost += MD
+
+            elif k > 0:
+
+                pass
                 # while
                 # for l in
                 #     ctr_anon.get((i,))
@@ -248,8 +273,8 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
             # print(dgh)
             # print(tree)
 
-
-    return -1
+    print(total_MD_cost)
+    return total_MD_cost
 
 
 def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
