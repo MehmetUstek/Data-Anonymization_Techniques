@@ -111,7 +111,14 @@ def read_DGH(DGH_file: str):
         if len(c) ==1:
             pass
         else:
-            indentation_level = len(c)
+            c_count = 1
+            for c_element in c:
+                if c_element != '':
+                    indentation_level = c_count
+                    break
+                c_count += 1
+
+            # indentation_level = len(c)
             # print(indentation_level)
         # Top down
         if i!= 0:
@@ -202,16 +209,13 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
     #     print("j", j)
     #     print("k", k)
     #     print(lost.keys())
-    list = []
-    for key in generalized.keys():
-        list.append(key)
+
     list_dgh = []
     list_tree = []
     for dgh, tree in DGHs.items():
         list_dgh.append(dgh)
         list_tree.append(tree)
     tree1 = Tree()
-    # print(list)
     for (i,j),k in ctr_anon.items():
         if k != 0:
             # print("i", i)
@@ -265,7 +269,57 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
     DGHs = read_DGHs(DGH_folder)
 
     #TODO: complete this function.
-    return -1
+    total_LM_cost = 0.0
+    ctr_raw = Counter()
+    for data in raw_dataset:
+        for df, sa in data.items():
+            ctr_raw[(df, sa)] += 1
+
+    list_dgh = []
+    list_tree = []
+    num_of_QIs = 0
+    for dgh, tree in DGHs.items():
+        list_dgh.append(dgh)
+        list_tree.append(tree)
+        num_of_QIs += 1
+    tree1 = Tree()
+
+    LM_cost = 0
+    for (i,j),k in ctr_raw.items():
+        if k != 0:
+            if i in list_dgh:
+                index = list_dgh.index(i)
+                tree1 = list_tree[index]
+                size = tree1.size()
+                current = tree1.get_node(j)
+                if current.is_leaf():
+                    LM_cost = 0
+                    print(LM_cost)
+                else:
+                    # while current.successors(tree1.identifier):
+                    #     l_temp = current.successors(tree1.identifier)
+                    #     print("temp",l_temp)
+                    x = 0
+                    a_list = [tree1[node].tag for node in tree1.expand_tree(nid=current.identifier, mode=Tree.DEPTH)]
+                    a_list = a_list[1:]
+                    print(a_list)
+                    number_of_descendant = len(a_list)
+                    LM_cost = float((number_of_descendant - 1) / (size -1))
+                    total_LM_cost += LM_cost
+                    print(LM_cost)
+
+
+
+
+    print(total_LM_cost)
+    return total_LM_cost
+
+def depth_first_search(visited, graph, node):
+    if node not in visited:
+        print(node)
+        visited.add(node)
+        for neighbour in graph[node]:
+            depth_first_search(visited, graph, neighbour)
 
 
 def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
@@ -325,7 +379,8 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     write_dataset(anonymized_dataset, output_file)
 
 # print(read_DGHs("DGHs"))
-cost_MD("adult-hw1.csv","adult-anonymized.csv", "DGHs" )
+# cost_MD("adult-hw1.csv","adult-anonymized.csv", "DGHs" )
+cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
 
 # Command line argument handling and calling of respective anonymizer:
 if len(sys.argv) < 6:

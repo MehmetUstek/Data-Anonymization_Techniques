@@ -1,7 +1,7 @@
 age,workclass,education,marital-status,occupation,relationship,gender,native-country,income
 25,Private,11th,Never-married,Machine-op-inspct,Own-child,Any,United-States,<=50K
 38,Private,HS-grad,Married-civ-spouse,Farming-fishing,Husband,Any,United-States,<=50K
-28,Local-gov,Assoc-acdm,Married-civ-spouse,Protective-serv,Husband,Male,Any,>50K
+28,Local-gov,Assoc-acdm,Married-civ-spouse,Protective-serv,Husband,Male,USA,>50K
 44,Private,Some-college,Married-civ-spouse,Machine-op-inspct,Husband,Male,United-States,>50K
 34,Private,10th,Never-married,Other-service,Not-in-family,Male,United-States,<=50K
 63,Self-emp-not-inc,Prof-school,Married-civ-spouse,Prof-specialty,Husband,Male,United-States,>50K
