@@ -167,8 +167,6 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
             and len(raw_dataset[0]) == len(anonymized_dataset[0]))
     DGHs = read_DGHs(DGH_folder)
 
-    # TODO: complete this function.
-    # print(DGHs)
     total_MD_cost = 0
     ctr_raw = Counter()
     for data in raw_dataset:
@@ -199,6 +197,7 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
         list_dgh.append(dgh)
         list_tree.append(tree)
     tree1 = Tree()
+    MD_list = []
     for (i, j), k in ctr_anon.items():
         if k != 0:
             # print("i", i)
@@ -225,12 +224,43 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
                 MD = (level_of_the_deepest - level_of_farthest) * abs(k)
                 print(MD)
                 total_MD_cost += MD
+                MD_list.append(MD)
 
             elif k > 0:
                 pass
 
     print(total_MD_cost)
-    return total_MD_cost
+    return MD_list
+
+# def MD_cost_of_two_records(counter_dict):
+#     for (i, j), k in counter_dict.items():
+#         if k != 0:
+#             # print("i", i)
+#             # print("j",j)
+#             # print("k",k)
+#             if k < 0:
+#                 # Get the corresponding tree
+#                 index = list_dgh.index(i)
+#                 tree1 = list_tree[index]
+#                 current = tree1.get_node(j)
+#                 level_of_the_deepest = current.data - 1
+#                 # Get the hierarchical parent until the j_wanted is equal to create a (i,j) pair that is in the ctr_anon dict.
+#                 j_wanted = ""
+#                 while not counter_dict.get((i, j_wanted)):
+#                     parent = tree1.parent(current.identifier)
+#                     current = parent
+#                     j_wanted = current.identifier
+#                     # j_temp -= 1
+#                 counter_dict[(i, j_wanted)] += k
+#                 counter_dict[(i, j)] -= k
+#                 # k represents the every to be deleted data. So it needs to be multiplied.
+#                 # print(ctr_anon)
+#                 level_of_farthest = current.data
+#                 MD = (level_of_the_deepest - level_of_farthest) * abs(k)
+#                 return MD
+#             elif k > 0:
+#                 pass
+
 
 
 def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
@@ -410,6 +440,41 @@ def k_anonymity(equivalence_class, k, DGHs):
     #     print(item)
     return equivalence_class
 
+def cluster_and_assing_dataset(raw_dataset, k: int, DGHs, dist):
+    number_of_clusters = int(len(raw_dataset) / k)
+    remainder = int(len(raw_dataset) % k)
+    max_number_of_records = int(len(raw_dataset) - remainder)
+    record_counter = 0
+    dict_of_clustered_records = defaultdict(list)
+
+    records_marked_list = [0 for record in raw_dataset]
+    iteration = 0
+    while records_marked_list.count(0) >= k:
+        rec_index = records_marked_list.index(0)
+        rec = raw_dataset[rec_index]
+        records_marked_list[rec_index] = 1
+        k_records_list = []
+        k_records_list.append(rec)
+        record_counter += 1
+        for i in range(k-1):
+            rec_index = records_marked_list.index(0)
+            rec = raw_dataset[rec_index]
+            records_marked_list[rec_index] = 1
+            k_records_list.append(rec)
+            record_counter += 1
+        if record_counter == max_number_of_records:
+            while remainder != 0:
+                rec_index = records_marked_list.index(0)
+                rec = raw_dataset[rec_index]
+                records_marked_list[rec_index] = 1
+                k_records_list.append(rec)
+                remainder -= 1
+                record_counter += 1
+        dict_of_clustered_records[iteration] = k_records_list
+    # print(records_marked_list)
+    # print(dict_of_clustered_records)
+    return dict_of_clustered_records
+
 
 def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
                           output_file: str):
@@ -427,13 +492,13 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     anonymized_dataset = []
     # TODO: complete this function.
 
-    for equivalence_class in dict_of_clustered_records.values():
-        # print(equivalence_class)
-        # while k_anonymity(equivalence_class, k):
-        #     pass
-        equivalence_class = k_anonymity(equivalence_class, k, DGHs)
-        for item in equivalence_class:
-            anonymized_dataset.append(item)
+    dist = cost_MD(raw_dataset_file, 'adult-random-anonymized.csv', DGH_folder)
+
+    dict_of_clustered_records = cluster_and_assing_dataset(raw_dataset, k, DGHs, dist)
+    # for equivalence_class in dict_of_clustered_records.values():
+    #     equivalence_class = k_anonymity(equivalence_class, k, DGHs)
+    #     for item in equivalence_class:
+    #         anonymized_dataset.append(item)
 
     write_dataset(anonymized_dataset, output_file)
 
@@ -458,9 +523,10 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
 
 # print(read_DGHs("DGHs"))
-# cost_MD("adult-hw1.csv","adult-anonymized.csv", "DGHs" )
+# cost_MD("adult_small.csv","adult-random-anonymized.csv", "DGHs" )
 # cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
-random_anonymizer('adult_small.csv', "DGHs", 3, 'adult-random-anonymized.csv')
+# random_anonymizer('adult_small.csv', "DGHs", 3, 'adult-random-anonymized.csv')
+clustering_anonymizer('adult_small.csv', "DGHs", 3, 'adult-random-anonymized.csv')
 
 # Command line argument handling and calling of respective anonymizer:
 if len(sys.argv) < 6:
