@@ -293,25 +293,7 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
     print(total_LM_cost)
     return total_LM_cost
 
-
-def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
-                      output_file: str):
-    """ K-anonymization a dataset, given a set of DGHs and a k-anonymity param.
-
-    Args:
-        raw_dataset_file (str): the path to the raw dataset file.
-        DGH_folder (str): the path to the DGH directory.
-        k (int): k-anonymity parameter.
-        output_file (str): the path to the output dataset file.
-    """
-    raw_dataset = read_dataset(raw_dataset_file)
-    DGHs = read_DGHs(DGH_folder)
-
-    anonymized_dataset = []
-
-    # Given a dataset, randomly divide the records in D, into clusters of size k
-    list_of_clustered_records = []
-    # I will use dicts to hold list of records.
+def randomly_assign_dataset(raw_dataset, k: int, DGHs):
     number_of_clusters = int(len(raw_dataset) / k)
     remainder = int(len(raw_dataset) % k)
     max_number_of_records = int(len(raw_dataset) - remainder)
@@ -341,25 +323,35 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
         print(dgh)
         lss[i] = dgh
         i += 1
-        # key_string += dgh + ","
+    return dict_of_clustered_records
 
-    # anonymized_dataset.append(lss)
+def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
+                      output_file: str):
+    """ K-anonymization a dataset, given a set of DGHs and a k-anonymity param.
 
+    Args:
+        raw_dataset_file (str): the path to the raw dataset file.
+        DGH_folder (str): the path to the DGH directory.
+        k (int): k-anonymity parameter.
+        output_file (str): the path to the output dataset file.
+    """
+    raw_dataset = read_dataset(raw_dataset_file)
+    DGHs = read_DGHs(DGH_folder)
+
+    anonymized_dataset = []
+
+    # Given a dataset, randomly divide the records in D, into clusters of size k
+    list_of_clustered_records = []
+    # I will use dicts to hold list of records.
+    dict_of_clustered_records = randomly_assign_dataset(raw_dataset,k, DGHs)
+    # Data is clustered into chunks of k records.
+    # k-anonymity
     for equivalence_class in dict_of_clustered_records.values():
-        # print(equivalence_class)
-        # while k_anonymity(equivalence_class, k):
-        #     pass
         equivalence_class = k_anonymity(equivalence_class, k, DGHs)
         for item in equivalence_class:
             anonymized_dataset.append(item)
 
 
-    # print(key_string)
-    # for i in dict_of_clustered_records:
-    #     anonymized_dataset.append(dict_of_clustered_records[i])
-
-    # Data is clustered into chunks of k records.
-    # k-anonymity
 
     write_dataset(anonymized_dataset, output_file)
 
@@ -435,6 +427,14 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     anonymized_dataset = []
     # TODO: complete this function.
 
+    for equivalence_class in dict_of_clustered_records.values():
+        # print(equivalence_class)
+        # while k_anonymity(equivalence_class, k):
+        #     pass
+        equivalence_class = k_anonymity(equivalence_class, k, DGHs)
+        for item in equivalence_class:
+            anonymized_dataset.append(item)
+
     write_dataset(anonymized_dataset, output_file)
 
 
@@ -460,7 +460,7 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 # print(read_DGHs("DGHs"))
 # cost_MD("adult-hw1.csv","adult-anonymized.csv", "DGHs" )
 # cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
-# random_anonymizer('adult-hw1.csv', "DGHs", 3, 'adult-random-anonymized.csv')
+random_anonymizer('adult_small.csv', "DGHs", 3, 'adult-random-anonymized.csv')
 
 # Command line argument handling and calling of respective anonymizer:
 if len(sys.argv) < 6:
