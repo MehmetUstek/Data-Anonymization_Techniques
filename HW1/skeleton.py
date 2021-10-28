@@ -7,6 +7,8 @@ import csv
 import glob
 import os
 import sys
+import random
+from _collections import defaultdict
 from treelib import Node, Tree
 from collections import Counter
 
@@ -268,7 +270,6 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
         and len(raw_dataset[0]) == len(anonymized_dataset[0]))
     DGHs = read_DGHs(DGH_folder)
 
-    #TODO: complete this function.
     total_LM_cost = 0.0
     ctr_raw = Counter()
     for data in raw_dataset:
@@ -305,8 +306,8 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
                     print(a_list)
                     number_of_descendant = len(a_list)
                     LM_cost = float((number_of_descendant - 1) / (size -1))
-                    total_LM_cost += LM_cost
-                    print(LM_cost)
+                    LM_cost_record = LM_cost * 1 / num_of_QIs
+                    total_LM_cost += LM_cost_record
 
 
 
@@ -314,12 +315,6 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
     print(total_LM_cost)
     return total_LM_cost
 
-def depth_first_search(visited, graph, node):
-    if node not in visited:
-        print(node)
-        visited.add(node)
-        for neighbour in graph[node]:
-            depth_first_search(visited, graph, neighbour)
 
 
 def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
@@ -337,6 +332,33 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
     anonymized_dataset = []
     #TODO: complete this function.
+
+    # Given a dataset, randomly divide the records in D, into clusters of size k
+    list_of_clustered_records = []
+    # I will use dicts to hold list of records.
+    number_of_clusters = int(len(raw_dataset) / k)
+    remainder = int(len(raw_dataset) % k)
+    max_number_of_records = int(len(raw_dataset) - remainder)
+    record_counter = 0
+    dict_of_clustered_records = defaultdict(list)
+    for record in raw_dataset:
+        rand_val = random.randint(0, number_of_clusters-1)
+        # if not dict_of_clustered_records.get(random)
+        if dict_of_clustered_records.get(rand_val):
+            while len(dict_of_clustered_records.get(rand_val)) == k:
+                if record_counter == max_number_of_records:
+                    break
+                rand_val = random.randint(0, number_of_clusters - 1)
+            dict_of_clustered_records.get(rand_val).append(record)
+        else:
+            dict_of_clustered_records[rand_val].append(record)
+        record_counter += 1
+
+    print(dict_of_clustered_records)
+
+    # Data is clustered into chunks of k records.
+    # k-anonymity
+
 
     write_dataset(anonymized_dataset, output_file)
 
@@ -380,7 +402,8 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
 # print(read_DGHs("DGHs"))
 # cost_MD("adult-hw1.csv","adult-anonymized.csv", "DGHs" )
-cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
+# cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
+random_anonymizer('adult_small.csv',"DGHs",3,'adult-random-anonymized.csv')
 
 # Command line argument handling and calling of respective anonymizer:
 if len(sys.argv) < 6:
