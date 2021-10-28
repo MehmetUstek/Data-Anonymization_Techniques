@@ -244,7 +244,7 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
             elif k > 0:
                 pass
 
-    print(total_MD_cost)
+    # print(total_MD_cost)
     return total_MD_cost
 
 
@@ -462,7 +462,7 @@ def calculate_dist_of_two_EC(EC1, EC2, DGH_folder: str):
     write_dataset(EC2, temp_EC2_file)
 
     dist = cost_MD(temp_EC1_file, temp_EC2_file, DGH_folder)
-    print(dist)
+    # print(dist)
     return dist
 
 
@@ -492,7 +492,7 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
     ec_lists = []
     temp = iter(EC_dict)
     next_index = 0
-    print("next", next(temp))
+    # print("next", next(temp))
     for index, equivalence_class1 in EC_dict.items():
         if next_index == 7:
             break
@@ -513,7 +513,7 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
 
 
 
-    print(k_records_list)
+    # print(k_records_list)
     return k_records_list, records_marked_list
 
 
@@ -569,7 +569,6 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     DGHs = read_DGHs(DGH_folder)
 
     anonymized_dataset = []
-    # TODO: complete this function.
 
     # dist = calculate_dist_of_two_EC("", "", DGH_folder)
     dict_of_clustered_records = cluster_and_assing_dataset(raw_dataset, k, DGH_folder)
@@ -579,6 +578,8 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
             anonymized_dataset.append(item)
 
     write_dataset(anonymized_dataset, output_file)
+    os.remove('temp_EC1_file.csv')
+    os.remove('temp_EC2_file.csv')
 
 
 def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
