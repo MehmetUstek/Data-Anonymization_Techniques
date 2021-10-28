@@ -413,7 +413,7 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
     temp = iter(EC_dict)
     next_index = 0
     for index, equivalence_class1 in EC_dict.items():
-        if next_index == 7:
+        if next_index == len(copy_records_marked_list):
             break
         next_index = next(temp)
 
