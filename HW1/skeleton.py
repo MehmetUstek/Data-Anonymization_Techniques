@@ -337,27 +337,27 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     write_dataset(anonymized_dataset, output_file)
 
 
-def k_anon(equivalence_class, DGHs):
-    counter = Counter()
-    for item in equivalence_class:
-        for dgh in DGHs.keys():
-            counter[(dgh, item[dgh])] += 1
+def k_anon(equivalence_class, DGHs,counter):
+    # counter = Counter()
+    # for item in equivalence_class:
+    #     for dgh in DGHs.keys():
+    #         counter[(dgh, item[dgh])] += 1
     least_common = counter.most_common()[-1]
     return least_common[1]
 
 
-def is_k_anon(equivalence_class, k, DGHs):
-    if k_anon(equivalence_class, DGHs) >= k:
+def is_k_anon(equivalence_class, k, DGHs,counter):
+    if k_anon(equivalence_class, DGHs,counter) >= k:
         return True
     return False
 
 
 def k_anonymity(equivalence_class, k, DGHs):
-    while not is_k_anon(equivalence_class, k, DGHs):
-        counter = Counter()
-        for item in equivalence_class:
-            for dgh in DGHs.keys():
-                counter[(dgh, item[dgh])] += 1
+    counter = Counter()
+    for item in equivalence_class:
+        for dgh in DGHs.keys():
+            counter[(dgh, item[dgh])] += 1
+    while not is_k_anon(equivalence_class, k, DGHs, counter):
         i = 0
         key = counter.most_common()[-1][0]
         while key[1] == 'Any':
@@ -374,6 +374,11 @@ def k_anonymity(equivalence_class, k, DGHs):
         for item in equivalence_class:
             if item[key[0]] == key[1]:
                 item[key[0]] = new_data
+                counter[(key[0],key[1])] -= 1
+                counter[(key[0],new_data)] += 1
+                if counter[(key[0],key[1])] == 0:
+                    del counter[(key[0],key[1])]
+
 
     return equivalence_class
 
@@ -510,7 +515,7 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 cost_MD("adult-hw1.csv", "adult-anonymized.csv", "DGHs")
 # cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
 # random_anonymizer('adult_small.csv', "DGHs", 3, 'adult-random-anonymized.csv')
-clustering_anonymizer('adult_small.csv', "DGHs", 10, 'adult-clustering-anonymized.csv')
+clustering_anonymizer('adult_small.csv', "DGHs", 5, 'adult-clustering-anonymized.csv')
 # topdown_anonymizer('adult_small.csv', "DGHs", 10, 'adult-topdown-anonymized.csv')
 
 # Command line argument handling and calling of respective anonymizer:
