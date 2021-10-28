@@ -431,7 +431,7 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
     return k_records_list, records_marked_list
 
 
-def cluster_and_assing_dataset(raw_dataset, k: int, DGH_folder: str):
+def cluster_and_assing_dataset(raw_dataset, k: int, DGH_folder: str, DGHs, anonymized_dataset):
     number_of_clusters = int(len(raw_dataset) / k)
     remainder = int(len(raw_dataset) % k)
     max_number_of_records = int(len(raw_dataset) - remainder)
@@ -449,20 +449,24 @@ def cluster_and_assing_dataset(raw_dataset, k: int, DGH_folder: str):
         for i in range(k - 1):
             k_records_list, records_marked_list = find_min_dist(raw_dataset, records_marked_list, k_records_list,
                                                                 DGH_folder, k)
-
-        dict_of_clustered_records[iteration] = k_records_list
+        k_records_list = k_anonymity(k_records_list, k, DGHs)
+        for item in k_records_list:
+            anonymized_dataset.append(item)
+        # dict_of_clustered_records[iteration] = k_records_list
         iteration += 1
 
-    if records_marked_list.count(0) > 0:
-        while remainder != 0:
-            rec_index = records_marked_list.index(0)
-            rec = raw_dataset[rec_index]
-            records_marked_list[rec_index] = 1
-            k_records_list.append(rec)
-            remainder -= 1
-            record_counter += 1
+    while records_marked_list.count(0) > 0:
+        rec_index = records_marked_list.index(0)
+        rec = raw_dataset[rec_index]
+        records_marked_list[rec_index] = 1
+        k_records_list.append(rec)
+        record_counter += 1
+    anonymized_dataset = anonymized_dataset[:-k]
+    k_records_list = k_anonymity(k_records_list, k + remainder, DGHs)
+    for item in k_records_list:
+        anonymized_dataset.append(item)
 
-    return dict_of_clustered_records
+    return anonymized_dataset
 
 
 def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
@@ -481,11 +485,12 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     anonymized_dataset = []
 
     # dist = calculate_dist_of_two_EC("", "", DGH_folder)
-    dict_of_clustered_records = cluster_and_assing_dataset(raw_dataset, k, DGH_folder)
-    for equivalence_class in dict_of_clustered_records.values():
-        equivalence_class = k_anonymity(equivalence_class, k, DGHs)
-        for item in equivalence_class:
-            anonymized_dataset.append(item)
+    # dict_of_clustered_records = cluster_and_assing_dataset(raw_dataset, k, DGH_folder)
+    # for equivalence_class in dict_of_clustered_records.values():
+    #     equivalence_class = k_anonymity(equivalence_class, k, DGHs)
+    #     for item in equivalence_class:
+    #         anonymized_dataset.append(item)
+    anonymized_dataset = cluster_and_assing_dataset(raw_dataset, k, DGH_folder, DGHs, anonymized_dataset)
 
     write_dataset(anonymized_dataset, output_file)
     os.remove('temp_EC1_file.csv')
