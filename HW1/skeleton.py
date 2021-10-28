@@ -57,10 +57,11 @@ def write_dataset(dataset, dataset_file: str) -> bool:
     """
     assert len(dataset) > 0, "The anonymized dataset is empty."
     keys = dataset[0].keys()
-    with open(dataset_file, 'w', newline='')  as output_file:
+    with open(dataset_file, 'w', newline='') as output_file:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(dataset)
+    output_file.close()
     return True
 
 
@@ -459,6 +460,7 @@ def calculate_dist_of_two_EC(EC1, EC2, DGH_folder: str):
     temp_EC2_file = 'temp_EC2_file.csv'
     write_dataset(EC1, temp_EC1_file)
     write_dataset(EC2, temp_EC2_file)
+
     dist = cost_MD(temp_EC1_file, temp_EC2_file, DGH_folder)
     print(dist)
     return dist
@@ -481,31 +483,38 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
     for index in index_list:
         # Must add 2 records for k = 3
         rec = raw_dataset[index]
-        records_marked_list[index] = 1
+        # records_marked_list[index] = 1
         # ec1_list.append(rec)
-        EC_dict[index_holder] = k_records_list.copy()
-        EC_dict[index_holder].append(rec)
+        EC_dict[index] = k_records_list.copy()
+        EC_dict[index].append(rec)
         index_holder +=1
     list_of_dists = []
     ec_lists = []
+    temp = iter(EC_dict)
+    next_index = 0
+    print("next", next(temp))
     for index, equivalence_class1 in EC_dict.items():
-        # index_holder = EC_dict[index][0]
-        # equivalence_class1 = EC_dict[index][1]
-        if index + 1 == len(EC_dict.items()):
+        if next_index == 7:
             break
-        equivalence_class2 = EC_dict[index + 1]
+        next_index = next(temp)
+
+        equivalence_class2 = EC_dict[next_index]
         dist = calculate_dist_of_two_EC(equivalence_class1,equivalence_class2, DGH_folder)
-        list_of_dists.append(dist)
+        list_of_dists.append((index,dist))
         # ec_lists.append()
-    min_val = min(list_of_dists)
-    index_of_min_val = list_of_dists.index(min_val)
-    k_records_list.append(EC_dict[index_of_min_val])
-    # records_marked_list = copy_records_marked_list.append()
+    min_val = min(list_of_dists, key = lambda  x: x[1])
+    # index_of_min_val = list_of_dists.index((min_val[0],min_val[1]))
+    k_records_list = []
+    for item in EC_dict[min_val[0]]:
+        k_records_list.append(item)
+    copy_records_marked_list[min_val[0]] = 1
+    records_marked_list = copy_records_marked_list
+
 
 
 
     print(k_records_list)
-    return k_records_list
+    return k_records_list, records_marked_list
 
 
 
@@ -526,19 +535,21 @@ def cluster_and_assing_dataset(raw_dataset, k: int, DGH_folder: str):
         k_records_list = [rec]
         record_counter += 1
         for i in range(k-1):
-            k_records_list = find_min_dist(raw_dataset,records_marked_list,k_records_list,DGH_folder, k)
+            k_records_list,records_marked_list = find_min_dist(raw_dataset,records_marked_list,k_records_list,DGH_folder, k)
 
-        if record_counter == max_number_of_records:
-            while remainder != 0:
-                rec_index = records_marked_list.index(0)
-                rec = raw_dataset[rec_index]
-                records_marked_list[rec_index] = 1
-                k_records_list.append(rec)
-                remainder -= 1
-                record_counter += 1
-        for i in k_records_list:
-            dict_of_clustered_records[iteration].append(i)
-        iteration += 1
+        dict_of_clustered_records[iteration] = k_records_list
+        iteration +=1
+
+
+    if records_marked_list.count(0) > 0:
+        while remainder != 0:
+            rec_index = records_marked_list.index(0)
+            rec = raw_dataset[rec_index]
+            records_marked_list[rec_index] = 1
+            k_records_list.append(rec)
+            remainder -= 1
+            record_counter += 1
+
     # print(records_marked_list)
     # print(dict_of_clustered_records)
     return dict_of_clustered_records
