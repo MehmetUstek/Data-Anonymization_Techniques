@@ -62,31 +62,6 @@ def write_dataset(dataset, dataset_file: str) -> bool:
         dict_writer.writerows(dataset)
     return True
 
-# class Tree:
-#     def __init__(self, val, queue, indentation):
-#         self.val = val
-#         self.children = []
-#
-#     def add_children(self,val, queue, indentation):
-#         child_node = Tree(val, queue, indentation)
-#         self.children.append(child_node)
-#         return child_node
-#     # def get_children(self, queue, indentation):
-#     #     for c in self.children:
-#     #         if self.children[c] ==
-#     def __repr__(self):
-#         return f"Tree({self.val}): {self.children}"
-#     # def get(self, root, indentation, queue):
-#     #     i = 0
-#     #     q = 0
-#     #     while q!=queue:
-#     #         q += 1
-#     #         root =
-#     #         while i!=indentation:
-#     #             i += 1
-#
-#     def tree_root(self):
-#         return
 
 def read_DGH(DGH_file: str):
     """ Reads one DGH file and returns in desired format.
@@ -141,6 +116,7 @@ def read_DGH(DGH_file: str):
 
     # tree.show()
     result = tree
+
     return result
 
 
@@ -317,6 +293,9 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
 
 
 
+
+
+
 def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     output_file: str):
     """ K-anonymization a dataset, given a set of DGHs and a k-anonymity param.
@@ -349,18 +328,78 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
                 if record_counter == max_number_of_records:
                     break
                 rand_val = random.randint(0, number_of_clusters - 1)
+                if not dict_of_clustered_records.get(rand_val):
+                    dict_of_clustered_records[rand_val] = []
+
             dict_of_clustered_records.get(rand_val).append(record)
         else:
             dict_of_clustered_records[rand_val].append(record)
         record_counter += 1
 
-    print(dict_of_clustered_records)
+    # print(dict_of_clustered_records)
+    key_string = ""
+    lss = {}
+    i= 0
+    for dgh in DGHs.keys():
+        print(dgh)
+        lss[i] = dgh
+        i += 1
+        # key_string += dgh + ","
+    for equivalence_class in dict_of_clustered_records.values():
+        print(equivalence_class)
+        # while k_anonymity(equivalence_class, k):
+        #     pass
+        k_anonymity(equivalence_class, k, DGHs)
+
+
+    key_string = key_string[:-1]
+    anonymized_dataset.append(lss)
+    print(key_string)
+    # for i in dict_of_clustered_records:
+    #     anonymized_dataset.append(dict_of_clustered_records[i])
 
     # Data is clustered into chunks of k records.
     # k-anonymity
 
 
     write_dataset(anonymized_dataset, output_file)
+
+def k_anon(equivalence_class, DGHs):
+    counter = Counter()
+    for item in equivalence_class:
+        for dgh in DGHs.keys():
+            counter[(dgh, item[dgh])] += 1
+    least_common = counter.most_common()[-1]
+    return least_common[1]
+def is_k_anon(equivalence_class, k, DGHs):
+    if k_anon(equivalence_class, DGHs) >= k:
+        return True
+    return False
+
+def k_anonymity(equivalence_class, k, DGHs):
+    counter = Counter()
+    for item in equivalence_class:
+        for dgh in DGHs.keys():
+            counter[(dgh,item[dgh])] += 1
+    print(counter)
+    value = 0
+    print("k-anon")
+    print(is_k_anon(equivalence_class,k, DGHs))
+    print(k_anon(equivalence_class,k,DGHs))
+    new_counter = Counter()
+    for key, value in counter.items():
+        while not int(value) >= k:
+            tree = DGHs[key[0]]
+
+            node = tree.get_node(key[1])
+            counter[(key,value)] -= 1
+            node = tree.parent(node.identifier)
+            new_counter[(dgh,node.identifier)] += 1
+            value += 1
+
+            # pass
+            # DGHs[]
+            print(counter)
 
 
 def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
