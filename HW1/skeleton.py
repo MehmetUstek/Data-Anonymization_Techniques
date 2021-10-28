@@ -371,7 +371,6 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     anonymized_dataset = []
 
     # Given a dataset, randomly divide the records in D, into clusters of size k
-    list_of_clustered_records = []
     # I will use dicts to hold list of records.
     dict_of_clustered_records = randomly_assign_dataset(raw_dataset,k, DGHs)
     # Data is clustered into chunks of k records.
@@ -453,8 +452,7 @@ def cluster_and_assing_dataset(raw_dataset, k: int, DGHs, dist):
         rec_index = records_marked_list.index(0)
         rec = raw_dataset[rec_index]
         records_marked_list[rec_index] = 1
-        k_records_list = []
-        k_records_list.append(rec)
+        k_records_list = [rec]
         record_counter += 1
         for i in range(k-1):
             rec_index = records_marked_list.index(0)
@@ -470,7 +468,9 @@ def cluster_and_assing_dataset(raw_dataset, k: int, DGHs, dist):
                 k_records_list.append(rec)
                 remainder -= 1
                 record_counter += 1
-        dict_of_clustered_records[iteration] = k_records_list
+        for i in k_records_list:
+            dict_of_clustered_records[iteration].append(i)
+        iteration += 1
     # print(records_marked_list)
     # print(dict_of_clustered_records)
     return dict_of_clustered_records
@@ -495,10 +495,10 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     dist = cost_MD(raw_dataset_file, 'adult-random-anonymized.csv', DGH_folder)
 
     dict_of_clustered_records = cluster_and_assing_dataset(raw_dataset, k, DGHs, dist)
-    # for equivalence_class in dict_of_clustered_records.values():
-    #     equivalence_class = k_anonymity(equivalence_class, k, DGHs)
-    #     for item in equivalence_class:
-    #         anonymized_dataset.append(item)
+    for equivalence_class in dict_of_clustered_records.values():
+        equivalence_class = k_anonymity(equivalence_class, k, DGHs)
+        for item in equivalence_class:
+            anonymized_dataset.append(item)
 
     write_dataset(anonymized_dataset, output_file)
 
