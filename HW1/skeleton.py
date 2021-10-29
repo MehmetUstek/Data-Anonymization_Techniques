@@ -82,7 +82,7 @@ def read_DGH(DGH_file: str):
 
     tree = Tree()
     total_children = 1
-    parent = tree.create_node(result[0][0].rstrip(), 'Any', data=0)
+    parent = tree.create_node(result[0][0].rstrip(), 'Any', data=1)
     root = parent
     i = 0
     total_children += 1
@@ -196,7 +196,44 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
     MD_list = []
     #TODO: Continue from here
     # for record in raw_dataset:
-    total_MD_cost = random.randrange(0,4)
+    cost = 0
+    iterator = 0
+    while ctr_anon:
+        (i,j),k = ctr_anon.popitem()
+        if not i in DGHs:
+            continue
+        index = list_dgh.index(i)
+        tree1 = list_tree[index]
+        current = tree1.get_node(j)
+        depth1 = current.data
+
+        nodes_list = [tree1[node].tag for node in tree1.expand_tree(mode=Tree.DEPTH)]
+        for z in range(abs(k)):
+            for n in nodes_list:
+                if (i,n) in ctr_anon:
+                    # print("b")
+                    node2 = tree1.get_node(n)
+                    depth2 = node2.data
+                    cost = (depth2 - depth1) * ctr_anon[(i,n)]
+                    # del ctr_anon[(i,j)]
+                    # del ctr_anon[(i,n)]
+                    if ctr_anon[(i,n)] >0:
+                        ctr_anon[(i,n)] -= 1
+                    else:
+                        ctr_anon[(i,n)] += 1
+                    if ctr_anon[(i,n)] == 0:
+                        del ctr_anon[(i,n)]
+                    total_MD_cost += cost
+                    # if cost != 0:
+                    #     print("a")
+                    break
+                    # print(cost)
+
+
+        # if
+    print(abs(total_MD_cost))
+
+        # ctr_anon.pop((i,_))
 
     # for (i, j), k in ctr_anon.items():
     #     if k != 0:
@@ -235,7 +272,7 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
     #         elif k > 0:
     #             pass
 
-    return total_MD_cost
+    return abs(total_MD_cost)
 
 def get_the_lowest_common_ancestor_for_two(tree, node1, node2):
     if node1 != node2:
@@ -600,10 +637,10 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
 
 # print(read_DGHs("DGHs"))
-# cost_MD("adult-hw1.csv", "adult-anonymized.csv", "DGHs")
+cost_MD("adult_small.csv", "adult-random-anonymized.csv", "DGHs")
 # cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
 # random_anonymizer('adult_small.csv', "DGHs", 3, 'adult-random-anonymized.csv')
-clustering_anonymizer('adult_small.csv', "DGHs", 3, 'adult-clustering-anonymized.csv')
+# clustering_anonymizer('adult_small.csv', "DGHs", 3, 'adult-clustering-anonymized.csv')
 # topdown_anonymizer('adult_small.csv', "DGHs", 10, 'adult-topdown-anonymized.csv')
 
 # Command line argument handling and calling of respective anonymizer:
