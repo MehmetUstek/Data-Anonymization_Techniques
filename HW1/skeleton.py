@@ -377,12 +377,23 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     # Given a dataset, randomly divide the records in D, into clusters of size k
     # I will use dicts to hold list of records.
     dict_of_clustered_records = randomly_assign_dataset(raw_dataset, k, DGHs)
+    number_of_records = int(len(raw_dataset))
+    remainder = number_of_records % k
     # Data is clustered into chunks of k records.
     # k-anonymity
+    iteration = 1
+    k_copy = k
     for equivalence_class in dict_of_clustered_records.values():
-        equivalence_class = k_anonymity(equivalence_class, k, DGHs)
+
+        is_last_ec = len(equivalence_class) != k_copy
+        if is_last_ec:
+            k = k + remainder
+        else:
+            k = k_copy
+        equivalence_class = k_anonymity(equivalence_class, k, DGHs,number_of_records= number_of_records, is_last_ec=is_last_ec, remainder=remainder)
         for item in equivalence_class:
             anonymized_dataset.append(item)
+        iteration += 1
 
     write_dataset(anonymized_dataset, output_file)
 
@@ -398,7 +409,7 @@ def is_k_anon(equivalence_class, k, DGHs, counter):
     return False
 
 
-def k_anonymity(equivalence_class, k, DGHs):
+def k_anonymity(equivalence_class, k, DGHs, remainder,number_of_records, is_last_ec: bool):
     equivalence_class_list = []
     counter = Counter()
     for item in equivalence_class:
@@ -410,7 +421,10 @@ def k_anonymity(equivalence_class, k, DGHs):
             equivalence_class_list.append(node)
     iteration = 1
     for dgh, tree in DGHs.items():
-        eq_list = equivalence_class_list[k * (iteration - 1):k * iteration]
+        if is_last_ec:
+            eq_list = equivalence_class_list[k * (iteration - 1):k * iteration]
+        else:
+            eq_list = equivalence_class_list[k * (iteration - 1):k * iteration]
         node = get_the_lowest_common_ancestor(tree, eq_list)
         # print(node)
         for item in equivalence_class:
@@ -568,8 +582,8 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 # print(read_DGHs("DGHs"))
 # cost_MD("adult_small.csv", "adult-random-anonymized.csv", "DGHs")
 # cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
-# random_anonymizer('adult_small.csv', "DGHs", 3, 'adult-random-anonymized.csv')
-clustering_anonymizer('adult_small.csv', "DGHs", 2, 'adult-clustering-anonymized.csv')
+random_anonymizer('adult_small.csv', "DGHs", 3, 'adult-random-anonymized.csv')
+# clustering_anonymizer('adult_small.csv', "DGHs", 8, 'adult-clustering-anonymized.csv')
 # topdown_anonymizer('adult_small.csv', "DGHs", 10, 'adult-topdown-anonymized.csv')
 
 # Command line argument handling and calling of respective anonymizer:

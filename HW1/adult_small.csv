@@ -7,4 +7,4 @@ age,workclass,education,marital-status,occupation,relationship,gender,native-cou
 63,Self-emp-not-inc,Prof-school,Married-civ-spouse,Prof-specialty,Husband,Male,United-States,>50K
 24,Private,Some-college,Never-married,Other-service,Unmarried,Female,United-States,<=50K
 55,Private,7th-8th,Married-civ-spouse,Craft-repair,Husband,Male,United-States,<=50K
-65,Private,HS-grad,Married-civ-spouse,Machine-op-inspct,Husband,Male,United-States,>50K
+
