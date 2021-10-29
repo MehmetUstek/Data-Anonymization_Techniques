@@ -209,7 +209,7 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
                 # print(ctr_anon)
                 level_of_farthest = current.data
                 MD = abs(level_of_the_deepest - level_of_farthest) * abs(k)
-                print(MD)
+                # print(MD)
                 total_MD_cost += MD
                 MD_list.append(MD)
 
@@ -406,14 +406,16 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
     index_holder = 0
     for index in index_list:
         rec = raw_dataset[index]
+        # records_marked_list[index] = 1
         EC_dict[index] = k_records_list.copy()
         EC_dict[index].append(rec)
         index_holder += 1
     list_of_dists = []
     temp = iter(EC_dict)
-    next_index = 0
+    next_index = next(temp)
+    # next_index = 0
     for index, equivalence_class1 in EC_dict.items():
-        if next_index == len(copy_records_marked_list):
+        if next_index == len(copy_records_marked_list) - 1:
             break
         next_index = next(temp)
 
