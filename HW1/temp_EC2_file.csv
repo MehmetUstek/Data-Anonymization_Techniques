@@ -1,0 +1,9 @@
+age,workclass,education,marital-status,occupation,relationship,gender,native-country,income
+25,Private,11th,Never-married,Machine-op-inspct,Own-child,Male,United-States,<=50K
+38,Private,HS-grad,Married-civ-spouse,Farming-fishing,Husband,Male,United-States,<=50K
+55,Private,7th-8th,Married-civ-spouse,Craft-repair,Husband,Male,United-States,<=50K
+48,Private,HS-grad,Married-civ-spouse,Machine-op-inspct,Husband,Male,United-States,>50K
+22,Private,5th-6th,Never-married,Priv-house-serv,Not-in-family,Male,Guatemala,<=50K
+34,Private,Some-college,Never-married,Other-service,Own-child,Female,United-States,<=50K
+17,Private,10th,Never-married,Machine-op-inspct,Not-in-family,Male,United-States,<=50K
+33,Private,Assoc-voc,Married-civ-spouse,Tech-support,Husband,Male,United-States,<=50K

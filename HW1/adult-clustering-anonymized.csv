@@ -2,7 +2,8 @@ age,workclass,education,marital-status,occupation,relationship,gender,native-cou
 "[0,50)",Private,Any,Married-civ-spouse,Any,Husband,Male,United-States,<=50K
 "[0,50)",Private,Any,Married-civ-spouse,Any,Husband,Male,United-States,<=50K
 "[0,50)",Private,Any,Married-civ-spouse,Any,Husband,Male,United-States,>50K
-Any,Any,Any,Any,Any,Any,Any,United-States,>50K
-Any,Any,Any,Any,Any,Any,Any,United-States,>50K
-Any,Any,Any,Any,Any,Any,Any,United-States,<=50K
-Any,Any,Any,Any,Any,Any,Any,United-States,<=50K
+Any,Private,Any,Any,Any,Any,Any,United-States,>50K
+Any,Private,Any,Any,Any,Any,Any,United-States,>50K
+Any,Private,Any,Any,Any,Any,Any,United-States,<=50K
+Any,Private,Any,Any,Any,Any,Any,United-States,<=50K
+Any,Private,Any,Any,Any,Any,Any,United-States,<=50K

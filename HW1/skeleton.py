@@ -196,7 +196,6 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
             list_tree.append(tree)
     tree1 = Tree()
     MD_list = []
-    # TODO: Continue from here
     # for record in raw_dataset:
     cost = 0
     iterator = 0
@@ -324,6 +323,35 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
 
     print(total_LM_cost)
     return total_LM_cost
+
+def LM_Cost_of_a_node(tree: Tree, node: Node):
+    subtree = tree.subtree(node.identifier)
+    number_of_descendants = len(subtree)
+    number_of_total_nodes = len(tree)
+    LM_Cost = (number_of_descendants - 1) / (number_of_total_nodes-1)
+    return LM_Cost
+
+def LM_Cost_of_a_record(record):
+    global list_tree
+    global list_dgh
+    number_of_dghs = len(list_dgh)
+    weight = 1.0 / number_of_dghs
+    LM_cost_record = 0
+    for node in record:
+        tree = list_tree[node]
+        lm_val = LM_Cost_of_a_node(tree,node)
+        LM_cost_record += weight * lm_val
+
+    return LM_cost_record
+
+
+
+
+
+
+
+
+
 
 
 def randomly_assign_dataset(raw_dataset, k: int, DGHs):
@@ -463,7 +491,6 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
     next_index = next(temp)
     for index, equivalence_class1 in EC_dict.items():
         # if next_index == len(copy_records_marked_list) - 1:
-        # TODO: Problem in here. EC_dict size 7, next index goes to 8.
         if next_index == list(EC_dict)[-1]:
             flag = True
             break
@@ -556,6 +583,9 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     os.remove('temp_EC1_file.csv')
     os.remove('temp_EC2_file.csv')
 
+def topdown_split():
+    pass
+
 
 def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
                        output_file: str):
@@ -573,14 +603,16 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     anonymized_dataset = []
     # TODO: complete this function.
 
+
+
     write_dataset(anonymized_dataset, output_file)
 
 
 # print(read_DGHs("DGHs"))
 # cost_MD("adult_small.csv", "adult-random-anonymized.csv", "DGHs")
-# cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
-# random_anonymizer('adult_small.csv', "DGHs", 3, 'adult-random-anonymized.csv')
-clustering_anonymizer('adult_small.csv', "DGHs", 3, 'adult-clustering-anonymized.csv')
+cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
+# random_anonymizer('adult_small.csv', "DGHs", 8, 'adult-random-anonymized.csv')
+# clustering_anonymizer('adult_small.csv', "DGHs", 8, 'adult-clustering-anonymized.csv')
 # topdown_anonymizer('adult_small.csv', "DGHs", 10, 'adult-topdown-anonymized.csv')
 
 # Command line argument handling and calling of respective anonymizer:
