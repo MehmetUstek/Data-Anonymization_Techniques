@@ -196,7 +196,7 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
     MD_list = []
     #TODO: Continue from here
     # for record in raw_dataset:
-
+    total_MD_cost = random.randrange(0,4)
 
     # for (i, j), k in ctr_anon.items():
     #     if k != 0:
@@ -208,58 +208,69 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
     #             tree1 = list_tree[index]
     #             current = tree1.get_node(j)
     #             level_of_the_deepest = current.data - 1
-                # node_wanted = [tree1[node].tag for node in tree1.expand_tree(mode=Tree.ZIGZAG, filter= lambda x: x.identifier == 'Any')]
-
-                # Get the hierarchical parent until the j_wanted is equal to create a (i,j) pair that is in the ctr_anon dict.
-                # j_wanted = j
-                # if not current.is_root():
-                #     parent = tree1.parent(current.identifier)
-                #     current = parent
-                #     j_wanted = current.identifier
-                # # TODO: Problem is in here.
-                # while not ctr_anon.get((i, j_wanted)):
-                #     if not current.is_root():
-                #         parent = tree1.parent(current.identifier)
-                #         current = parent
-                #         j_wanted = current.identifier
-                #     else:
-                #         break
-                # ctr_anon[(i, j_wanted)] += k
-                # ctr_anon[(i, j)] -= k
-                # k represents the every to be deleted data. So it needs to be multiplied.
-            #     level_of_farthest = current.data - 1
-            #     MD = abs(level_of_the_deepest - level_of_farthest) * abs(k)
-            #     total_MD_cost += MD
-            #     MD_list.append(MD)
-            #
-            # elif k > 0:
-            #     pass
+    #             # node_wanted = [tree1[node].tag for node in tree1.expand_tree(mode=Tree.ZIGZAG, filter= lambda x: x.identifier == 'Any')]
+    #
+    #             # Get the hierarchical parent until the j_wanted is equal to create a (i,j) pair that is in the ctr_anon dict.
+    #             # j_wanted = j
+    #             if not current.is_root():
+    #                 parent = tree1.parent(current.identifier)
+    #                 current = parent
+    #                 j_wanted = current.identifier
+    #             # TODO: Problem is in here.
+    #             while not ctr_anon.get((i, j_wanted)):
+    #                 if not current.is_root():
+    #                     parent = tree1.parent(current.identifier)
+    #                     current = parent
+    #                     j_wanted = current.identifier
+    #                 else:
+    #                     break
+    #             ctr_anon[(i, j_wanted)] += k
+    #             ctr_anon[(i, j)] -= k
+    #             # k represents the every to be deleted data. So it needs to be multiplied.
+    #             level_of_farthest = current.data - 1
+    #             MD = abs(level_of_the_deepest - level_of_farthest) * abs(k)
+    #             total_MD_cost += MD
+    #             MD_list.append(MD)
+    #
+    #         elif k > 0:
+    #             pass
 
     return total_MD_cost
 
 def get_the_lowest_common_ancestor_for_two(tree, node1, node2):
     if node1 != node2:
-        node1 = tree.parent(node1.identifier)
-        node2= tree.parent(node2.identifier)
-        get_the_lowest_common_ancestor_for_two(tree,node1,node2)
-    else:
-        return node1
+        if node1.data > node2.data:
+            while node1.data != node2.data:
+                node1 = tree.parent(node1.identifier)
+        elif node2.data > node1.data:
+            while node1.data != node2.data:
+                node2 = tree.parent(node2.identifier)
+        if node1 == node2:
+            return node1
+        else:
+            while node1 != node2:
+                node1 = tree.parent(node1.identifier)
+                node2 = tree.parent(node2.identifier)
+            return node1
+    return node1
 
 def get_the_lowest_common_ancestor(tree, list_of_nodes: list):
+    node = ''
     visited = []
-    for i in list_of_nodes:
-        for j in list_of_nodes:
+    for i in range(len(list_of_nodes)):
+        for j in range(len(list_of_nodes)):
             if i != j:
-                if not i in visited:
-                    get_the_lowest_common_ancestor_for_two(tree,i,j)
-                    visited.append(i)
+                if not (i,j) in visited:
+                    i_node = list_of_nodes[i]
+                    j_node = list_of_nodes[j]
+                    node = get_the_lowest_common_ancestor_for_two(tree,i_node,j_node)
+                    visited.append((i,j))
+                    visited.append((j,i))
                 else:
                     continue
-
-
-
-
-
+        #     j_iteration += 1
+        # i_iteration += 1
+    return node
 
 
 
@@ -399,31 +410,45 @@ def is_k_anon(equivalence_class, k, DGHs,counter):
 
 
 def k_anonymity(equivalence_class, k, DGHs):
+    equivalence_class_list = []
     counter = Counter()
     for item in equivalence_class:
         for dgh in DGHs.keys():
             counter[(dgh, item[dgh])] += 1
-    while not is_k_anon(equivalence_class, k, DGHs, counter):
-        i = 0
-        key = counter.most_common()[-1][0]
-        while key[1] == 'Any':
-            key = counter.most_common()[-1 - i][0]
-            i += 1
-        tree = DGHs[key[0]]
-
-        node = tree.get_node(key[1])
-        if not node.is_root():
-            node = tree.parent(node.identifier)
-        else:
-            continue
-        new_data = node.tag
+    for dgh, tree in DGHs.items():
         for item in equivalence_class:
-            if item[key[0]] == key[1]:
-                item[key[0]] = new_data
-                counter[(key[0],key[1])] -= 1
-                counter[(key[0],new_data)] += 1
-                if counter[(key[0],key[1])] == 0:
-                    del counter[(key[0],key[1])]
+            node = tree.get_node(item[dgh])
+            equivalence_class_list.append(node)
+    # while not is_k_anon(equivalence_class, k, DGHs, counter):
+    #     i = 0
+    #     key = counter.most_common()[-1][0]
+    #     while key[1] == 'Any':
+    #         key = counter.most_common()[-1 - i][0]
+    #         i += 1
+    #     tree = DGHs[key[0]]
+    #
+    #     node = tree.get_node(key[1])
+    #     if not node.is_root():
+    #         node = tree.parent(node.identifier)
+    #     else:
+    #         continue
+    #     new_data = node.tag
+    #     for item in equivalence_class:
+    #         if item[key[0]] == key[1]:
+    #             item[key[0]] = new_data
+    #             counter[(key[0],key[1])] -= 1
+    #             counter[(key[0],new_data)] += 1
+    #             if counter[(key[0],key[1])] == 0:
+    #                 del counter[(key[0],key[1])]
+    iteration = 1
+    for dgh,tree in DGHs.items():
+        eq_list = equivalence_class_list[k * (iteration-1):k*iteration]
+        node = get_the_lowest_common_ancestor(tree,eq_list)
+        # print(node)
+        for item in equivalence_class:
+            item[dgh] = node.tag
+        iteration += 1
+
 
 
     return equivalence_class
@@ -460,14 +485,23 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
     temp = iter(EC_dict)
     next_index = next(temp)
     for index, equivalence_class1 in EC_dict.items():
-        if next_index == len(copy_records_marked_list) - 1:
+        # if next_index == len(copy_records_marked_list) - 1:
+        # TODO: Problem in here. EC_dict size 7, next index goes to 8.
+        if next_index == list(EC_dict)[-1]:
+            flag = True
             break
         next_index = next(temp)
 
         equivalence_class2 = EC_dict[next_index]
         dist = calculate_dist_of_two_EC(equivalence_class1, equivalence_class2, DGH_folder)
         list_of_dists.append((index, dist))
-    min_val = min(list_of_dists, key=lambda x: x[1])
+    # if flag:
+    #     min_val = (index, 0)
+    # else:
+    if list_of_dists:
+        min_val = min(list_of_dists, key=lambda x: x[1])
+    else:
+        min_val = (index,0)
     # index_of_min_val = list_of_dists.index((min_val[0],min_val[1]))
     k_records_list = []
     for item in EC_dict[min_val[0]]:
@@ -481,6 +515,8 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
 def cluster_and_assing_dataset(raw_dataset, k: int, DGH_folder: str, DGHs, anonymized_dataset):
     remainder = int(len(raw_dataset) % k)
     record_counter = 0
+    max_number_of_records = int(len(raw_dataset) - remainder)
+    record_counter = 0
 
     records_marked_list = [0 for record in raw_dataset]
     iteration = 0
@@ -491,6 +527,8 @@ def cluster_and_assing_dataset(raw_dataset, k: int, DGH_folder: str, DGHs, anony
         k_records_list = [rec]
         record_counter += 1
         for i in range(k - 1):
+            # if iteration == max_number_of_records:
+            #     continue
             k_records_list, records_marked_list = find_min_dist(raw_dataset, records_marked_list, k_records_list,
                                                                 DGH_folder, k)
         k_records_list = k_anonymity(k_records_list, k, DGHs)
