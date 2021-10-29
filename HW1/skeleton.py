@@ -22,6 +22,8 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 5:
 DGHs = {}
 list_dgh = []
 list_tree = []
+
+
 ##############################################################################
 # Helper Functions                                                           #
 # These functions are provided to you as starting points. They may help your #
@@ -183,7 +185,7 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
         for df, sa in data.items():
             ctr_anon[(df, sa)] += 1
     ctr_anon.subtract(ctr_raw)
-    filtered = dict(filter(lambda k: k[1]!=0, ctr_anon.items()))
+    filtered = dict(filter(lambda k: k[1] != 0, ctr_anon.items()))
     # print(filtered)
 
     global list_dgh
@@ -194,12 +196,12 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
             list_tree.append(tree)
     tree1 = Tree()
     MD_list = []
-    #TODO: Continue from here
+    # TODO: Continue from here
     # for record in raw_dataset:
     cost = 0
     iterator = 0
     while ctr_anon:
-        (i,j),k = ctr_anon.popitem()
+        (i, j), k = ctr_anon.popitem()
         if not i in DGHs:
             continue
         index = list_dgh.index(i)
@@ -210,69 +212,24 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
         nodes_list = [tree1[node].tag for node in tree1.expand_tree(mode=Tree.DEPTH)]
         for z in range(abs(k)):
             for n in nodes_list:
-                if (i,n) in ctr_anon:
+                if (i, n) in ctr_anon:
                     # print("b")
                     node2 = tree1.get_node(n)
                     depth2 = node2.data
-                    cost = (depth2 - depth1) * ctr_anon[(i,n)]
+                    cost = (depth2 - depth1) * ctr_anon[(i, n)]
                     # del ctr_anon[(i,j)]
                     # del ctr_anon[(i,n)]
-                    if ctr_anon[(i,n)] >0:
-                        ctr_anon[(i,n)] -= 1
+                    if ctr_anon[(i, n)] > 0:
+                        ctr_anon[(i, n)] -= 1
                     else:
-                        ctr_anon[(i,n)] += 1
-                    if ctr_anon[(i,n)] == 0:
-                        del ctr_anon[(i,n)]
+                        ctr_anon[(i, n)] += 1
+                    if ctr_anon[(i, n)] == 0:
+                        del ctr_anon[(i, n)]
                     total_MD_cost += cost
-                    # if cost != 0:
-                    #     print("a")
                     break
-                    # print(cost)
-
-
-        # if
-    print(abs(total_MD_cost))
-
-        # ctr_anon.pop((i,_))
-
-    # for (i, j), k in ctr_anon.items():
-    #     if k != 0:
-    #         if not i in DGHs:
-    #             continue
-    #         if k < 0:
-    #             # Get the corresponding tree
-    #             index = list_dgh.index(i)
-    #             tree1 = list_tree[index]
-    #             current = tree1.get_node(j)
-    #             level_of_the_deepest = current.data - 1
-    #             # node_wanted = [tree1[node].tag for node in tree1.expand_tree(mode=Tree.ZIGZAG, filter= lambda x: x.identifier == 'Any')]
-    #
-    #             # Get the hierarchical parent until the j_wanted is equal to create a (i,j) pair that is in the ctr_anon dict.
-    #             # j_wanted = j
-    #             if not current.is_root():
-    #                 parent = tree1.parent(current.identifier)
-    #                 current = parent
-    #                 j_wanted = current.identifier
-    #             # TODO: Problem is in here.
-    #             while not ctr_anon.get((i, j_wanted)):
-    #                 if not current.is_root():
-    #                     parent = tree1.parent(current.identifier)
-    #                     current = parent
-    #                     j_wanted = current.identifier
-    #                 else:
-    #                     break
-    #             ctr_anon[(i, j_wanted)] += k
-    #             ctr_anon[(i, j)] -= k
-    #             # k represents the every to be deleted data. So it needs to be multiplied.
-    #             level_of_farthest = current.data - 1
-    #             MD = abs(level_of_the_deepest - level_of_farthest) * abs(k)
-    #             total_MD_cost += MD
-    #             MD_list.append(MD)
-    #
-    #         elif k > 0:
-    #             pass
 
     return abs(total_MD_cost)
+
 
 def get_the_lowest_common_ancestor_for_two(tree, node1, node2):
     if node1 != node2:
@@ -291,25 +248,24 @@ def get_the_lowest_common_ancestor_for_two(tree, node1, node2):
             return node1
     return node1
 
+
 def get_the_lowest_common_ancestor(tree, list_of_nodes: list):
     node = ''
     visited = []
     for i in range(len(list_of_nodes)):
         for j in range(len(list_of_nodes)):
             if i != j:
-                if not (i,j) in visited:
+                if not (i, j) in visited:
                     i_node = list_of_nodes[i]
                     j_node = list_of_nodes[j]
-                    node = get_the_lowest_common_ancestor_for_two(tree,i_node,j_node)
-                    visited.append((i,j))
-                    visited.append((j,i))
+                    node = get_the_lowest_common_ancestor_for_two(tree, i_node, j_node)
+                    visited.append((i, j))
+                    visited.append((j, i))
                 else:
                     continue
         #     j_iteration += 1
         # i_iteration += 1
     return node
-
-
 
 
 def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
@@ -431,17 +387,13 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     write_dataset(anonymized_dataset, output_file)
 
 
-def k_anon(equivalence_class, DGHs,counter):
-    # counter = Counter()
-    # for item in equivalence_class:
-    #     for dgh in DGHs.keys():
-    #         counter[(dgh, item[dgh])] += 1
+def k_anon(equivalence_class, DGHs, counter):
     least_common = counter.most_common()[-1]
     return least_common[1]
 
 
-def is_k_anon(equivalence_class, k, DGHs,counter):
-    if k_anon(equivalence_class, DGHs,counter) >= k:
+def is_k_anon(equivalence_class, k, DGHs, counter):
+    if k_anon(equivalence_class, DGHs, counter) >= k:
         return True
     return False
 
@@ -456,37 +408,14 @@ def k_anonymity(equivalence_class, k, DGHs):
         for item in equivalence_class:
             node = tree.get_node(item[dgh])
             equivalence_class_list.append(node)
-    # while not is_k_anon(equivalence_class, k, DGHs, counter):
-    #     i = 0
-    #     key = counter.most_common()[-1][0]
-    #     while key[1] == 'Any':
-    #         key = counter.most_common()[-1 - i][0]
-    #         i += 1
-    #     tree = DGHs[key[0]]
-    #
-    #     node = tree.get_node(key[1])
-    #     if not node.is_root():
-    #         node = tree.parent(node.identifier)
-    #     else:
-    #         continue
-    #     new_data = node.tag
-    #     for item in equivalence_class:
-    #         if item[key[0]] == key[1]:
-    #             item[key[0]] = new_data
-    #             counter[(key[0],key[1])] -= 1
-    #             counter[(key[0],new_data)] += 1
-    #             if counter[(key[0],key[1])] == 0:
-    #                 del counter[(key[0],key[1])]
     iteration = 1
-    for dgh,tree in DGHs.items():
-        eq_list = equivalence_class_list[k * (iteration-1):k*iteration]
-        node = get_the_lowest_common_ancestor(tree,eq_list)
+    for dgh, tree in DGHs.items():
+        eq_list = equivalence_class_list[k * (iteration - 1):k * iteration]
+        node = get_the_lowest_common_ancestor(tree, eq_list)
         # print(node)
         for item in equivalence_class:
             item[dgh] = node.tag
         iteration += 1
-
-
 
     return equivalence_class
 
@@ -538,7 +467,7 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
     if list_of_dists:
         min_val = min(list_of_dists, key=lambda x: x[1])
     else:
-        min_val = (index,0)
+        min_val = (index, 0)
     # index_of_min_val = list_of_dists.index((min_val[0],min_val[1]))
     k_records_list = []
     for item in EC_dict[min_val[0]]:
@@ -637,10 +566,10 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
 
 # print(read_DGHs("DGHs"))
-cost_MD("adult_small.csv", "adult-random-anonymized.csv", "DGHs")
+# cost_MD("adult_small.csv", "adult-random-anonymized.csv", "DGHs")
 # cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
 # random_anonymizer('adult_small.csv', "DGHs", 3, 'adult-random-anonymized.csv')
-# clustering_anonymizer('adult_small.csv', "DGHs", 3, 'adult-clustering-anonymized.csv')
+clustering_anonymizer('adult_small.csv', "DGHs", 2, 'adult-clustering-anonymized.csv')
 # topdown_anonymizer('adult_small.csv', "DGHs", 10, 'adult-topdown-anonymized.csv')
 
 # Command line argument handling and calling of respective anonymizer:
