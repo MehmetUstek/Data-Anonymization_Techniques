@@ -344,6 +344,14 @@ def LM_Cost_of_a_record(record):
 
     return LM_cost_record
 
+def LM_Cost_of_a_table(dataset):
+    LM_Cost = 0
+    for record in dataset:
+        LM_Cost += LM_Cost_of_a_record(record)
+    return LM_Cost
+
+
+
 
 
 
