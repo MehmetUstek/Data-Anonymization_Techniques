@@ -19,7 +19,9 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 5:
     sys.stdout.write("Requires Python 3.x.\n")
     sys.exit(1)
 
-
+DGHs = {}
+list_dgh = []
+list_tree = []
 ##############################################################################
 # Helper Functions                                                           #
 # These functions are provided to you as starting points. They may help your #
@@ -161,11 +163,14 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
     Returns:
         float: the calculated cost.
     """
+    # TODO: Really need an optimization, as this holds the whole function back by slowing it at least 10 times.
     raw_dataset = read_dataset(raw_dataset_file)
     anonymized_dataset = read_dataset(anonymized_dataset_file)
-    assert (len(raw_dataset) > 0 and len(raw_dataset) == len(anonymized_dataset)
-            and len(raw_dataset[0]) == len(anonymized_dataset[0]))
-    DGHs = read_DGHs(DGH_folder)
+    global DGHs
+    if not DGHs:
+        assert (len(raw_dataset) > 0 and len(raw_dataset) == len(anonymized_dataset)
+                and len(raw_dataset[0]) == len(anonymized_dataset[0]))
+        DGHs = read_DGHs(DGH_folder)
 
     total_MD_cost = 0
     ctr_raw = Counter()
@@ -178,46 +183,85 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
         for df, sa in data.items():
             ctr_anon[(df, sa)] += 1
     ctr_anon.subtract(ctr_raw)
+    filtered = dict(filter(lambda k: k[1]!=0, ctr_anon.items()))
+    # print(filtered)
 
-    list_dgh = []
-    list_tree = []
-    for dgh, tree in DGHs.items():
-        list_dgh.append(dgh)
-        list_tree.append(tree)
+    global list_dgh
+    global list_tree
+    if not (list_dgh and list_tree):
+        for dgh, tree in DGHs.items():
+            list_dgh.append(dgh)
+            list_tree.append(tree)
     tree1 = Tree()
     MD_list = []
+    #TODO: Continue from here
+    # for record in raw_dataset:
 
-    for (i, j), k in ctr_anon.items():
-        if k != 0:
-            if not i in DGHs:
-                continue
-            if k < 0:
-                # Get the corresponding tree
-                index = list_dgh.index(i)
-                tree1 = list_tree[index]
-                current = tree1.get_node(j)
-                level_of_the_deepest = current.data - 1
+
+    # for (i, j), k in ctr_anon.items():
+    #     if k != 0:
+    #         if not i in DGHs:
+    #             continue
+    #         if k < 0:
+    #             # Get the corresponding tree
+    #             index = list_dgh.index(i)
+    #             tree1 = list_tree[index]
+    #             current = tree1.get_node(j)
+    #             level_of_the_deepest = current.data - 1
+                # node_wanted = [tree1[node].tag for node in tree1.expand_tree(mode=Tree.ZIGZAG, filter= lambda x: x.identifier == 'Any')]
+
                 # Get the hierarchical parent until the j_wanted is equal to create a (i,j) pair that is in the ctr_anon dict.
-                j_wanted = j
-                while not ctr_anon.get((i, j_wanted)):
-                    parent = tree1.parent(current.identifier)
-                    current = parent
-                    j_wanted = current.identifier
-                ctr_anon[(i, j_wanted)] += k
-                ctr_anon[(i, j)] -= k
+                # j_wanted = j
+                # if not current.is_root():
+                #     parent = tree1.parent(current.identifier)
+                #     current = parent
+                #     j_wanted = current.identifier
+                # # TODO: Problem is in here.
+                # while not ctr_anon.get((i, j_wanted)):
+                #     if not current.is_root():
+                #         parent = tree1.parent(current.identifier)
+                #         current = parent
+                #         j_wanted = current.identifier
+                #     else:
+                #         break
+                # ctr_anon[(i, j_wanted)] += k
+                # ctr_anon[(i, j)] -= k
                 # k represents the every to be deleted data. So it needs to be multiplied.
-                # print(ctr_anon)
-                level_of_farthest = current.data
-                MD = abs(level_of_the_deepest - level_of_farthest) * abs(k)
-                # print(MD)
-                total_MD_cost += MD
-                MD_list.append(MD)
+            #     level_of_farthest = current.data - 1
+            #     MD = abs(level_of_the_deepest - level_of_farthest) * abs(k)
+            #     total_MD_cost += MD
+            #     MD_list.append(MD)
+            #
+            # elif k > 0:
+            #     pass
 
-            elif k > 0:
-                pass
-
-    # print(total_MD_cost)
     return total_MD_cost
+
+def get_the_lowest_common_ancestor_for_two(tree, node1, node2):
+    if node1 != node2:
+        node1 = tree.parent(node1.identifier)
+        node2= tree.parent(node2.identifier)
+        get_the_lowest_common_ancestor_for_two(tree,node1,node2)
+    else:
+        return node1
+
+def get_the_lowest_common_ancestor(tree, list_of_nodes: list):
+    visited = []
+    for i in list_of_nodes:
+        for j in list_of_nodes:
+            if i != j:
+                if not i in visited:
+                    get_the_lowest_common_ancestor_for_two(tree,i,j)
+                    visited.append(i)
+                else:
+                    continue
+
+
+
+
+
+
+
 
 
 def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
@@ -320,7 +364,9 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
         output_file (str): the path to the output dataset file.
     """
     raw_dataset = read_dataset(raw_dataset_file)
-    DGHs = read_DGHs(DGH_folder)
+    global DGHs
+    if not DGHs:
+        DGHs = read_DGHs(DGH_folder)
 
     anonymized_dataset = []
 
@@ -413,7 +459,6 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
     list_of_dists = []
     temp = iter(EC_dict)
     next_index = next(temp)
-    # next_index = 0
     for index, equivalence_class1 in EC_dict.items():
         if next_index == len(copy_records_marked_list) - 1:
             break
@@ -434,11 +479,8 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
 
 
 def cluster_and_assing_dataset(raw_dataset, k: int, DGH_folder: str, DGHs, anonymized_dataset):
-    number_of_clusters = int(len(raw_dataset) / k)
     remainder = int(len(raw_dataset) % k)
-    max_number_of_records = int(len(raw_dataset) - remainder)
     record_counter = 0
-    dict_of_clustered_records = defaultdict(list)
 
     records_marked_list = [0 for record in raw_dataset]
     iteration = 0
@@ -454,7 +496,6 @@ def cluster_and_assing_dataset(raw_dataset, k: int, DGH_folder: str, DGHs, anony
         k_records_list = k_anonymity(k_records_list, k, DGHs)
         for item in k_records_list:
             anonymized_dataset.append(item)
-        # dict_of_clustered_records[iteration] = k_records_list
         iteration += 1
 
     while records_marked_list.count(0) > 0:
@@ -482,7 +523,9 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
         output_file (str): the path to the output dataset file.
     """
     raw_dataset = read_dataset(raw_dataset_file)
-    DGHs = read_DGHs(DGH_folder)
+    global DGHs
+    if not DGHs:
+        DGHs = read_DGHs(DGH_folder)
 
     anonymized_dataset = []
 
@@ -519,10 +562,10 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
 
 # print(read_DGHs("DGHs"))
-cost_MD("adult-hw1.csv", "adult-anonymized.csv", "DGHs")
+# cost_MD("adult-hw1.csv", "adult-anonymized.csv", "DGHs")
 # cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
 # random_anonymizer('adult_small.csv', "DGHs", 3, 'adult-random-anonymized.csv')
-clustering_anonymizer('adult_small.csv', "DGHs", 5, 'adult-clustering-anonymized.csv')
+clustering_anonymizer('adult_small.csv', "DGHs", 3, 'adult-clustering-anonymized.csv')
 # topdown_anonymizer('adult_small.csv', "DGHs", 10, 'adult-topdown-anonymized.csv')
 
 # Command line argument handling and calling of respective anonymizer:
