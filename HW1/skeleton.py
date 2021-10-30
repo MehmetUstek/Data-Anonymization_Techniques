@@ -594,10 +594,12 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
 # print(read_DGHs("DGHs"))
 # cost_MD("adult_small.csv", "adult-random-anonymized.csv", "DGHs")
-cost_LM("adult_small.csv","adult-random-anonymized.csv", "DGHs" )
+# cost_LM("adult_small.csv","adult-random-anonymized.csv", "DGHs" )
 # random_anonymizer('adult_small.csv', "DGHs", 8, 'adult-random-anonymized.csv')
-# clustering_anonymizer('adult_small.csv', "DGHs", 8, 'adult-clustering-anonymized.csv')
-# topdown_anonymizer('adult_small.csv', "DGHs", 10, 'adult-topdown-anonymized.csv')
+# TODO: needs optimization.
+# Takes 36 seconds with k = 10, dataset length = 100
+# clustering_anonymizer('adult_small.csv', "DGHs", 10, 'adult-clustering-anonymized.csv')
+topdown_anonymizer('adult_small.csv', "DGHs", 10, 'adult-topdown-anonymized.csv')
 
 # Command line argument handling and calling of respective anonymizer:
 if len(sys.argv) < 6:
