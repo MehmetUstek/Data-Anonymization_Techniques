@@ -284,42 +284,50 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
     assert (len(raw_dataset) > 0 and len(raw_dataset) == len(anonymized_dataset)
             and len(raw_dataset[0]) == len(anonymized_dataset[0]))
     DGHs = read_DGHs(DGH_folder)
-
-    total_LM_cost = 0.0
-    ctr_raw = Counter()
-    for data in raw_dataset:
-        for df, sa in data.items():
-            ctr_raw[(df, sa)] += 1
-
-    list_dgh = []
-    list_tree = []
-    num_of_QIs = 0
-    for dgh, tree in DGHs.items():
-        list_dgh.append(dgh)
-        list_tree.append(tree)
-        num_of_QIs += 1
-    tree1 = Tree()
-
-    LM_cost = 0
-    for (i, j), k in ctr_raw.items():
-        if k != 0:
-            if i in list_dgh:
-                index = list_dgh.index(i)
-                tree1 = list_tree[index]
-                size = tree1.size()
-                current = tree1.get_node(j)
-                if current.is_leaf():
-                    LM_cost = 0
-                    print(LM_cost)
-                else:
-                    x = 0
-                    a_list = [tree1[node].tag for node in tree1.expand_tree(nid=current.identifier, mode=Tree.DEPTH)]
-                    a_list = a_list[1:]
-                    print(a_list)
-                    number_of_descendant = len(a_list)
-                    LM_cost = float((number_of_descendant - 1) / (size - 1))
-                    LM_cost_record = LM_cost * 1 / num_of_QIs
-                    total_LM_cost += LM_cost_record
+    global list_dgh
+    global list_tree
+    if not (list_dgh and list_tree):
+        for dgh, tree in DGHs.items():
+            list_dgh.append(dgh)
+            list_tree.append(tree)
+    cost1 = LM_Cost_of_a_table(raw_dataset)
+    cost2= LM_Cost_of_a_table(anonymized_dataset)
+    total_LM_cost = abs(cost1 - cost2)
+    # total_LM_cost = 0.0
+    # ctr_raw = Counter()
+    # for data in raw_dataset:
+    #     for df, sa in data.items():
+    #         ctr_raw[(df, sa)] += 1
+    #
+    # list_dgh = []
+    # list_tree = []
+    # num_of_QIs = 0
+    # for dgh, tree in DGHs.items():
+    #     list_dgh.append(dgh)
+    #     list_tree.append(tree)
+    #     num_of_QIs += 1
+    # tree1 = Tree()
+    #
+    # LM_cost = 0
+    # for (i, j), k in ctr_raw.items():
+    #     if k != 0:
+    #         if i in list_dgh:
+    #             index = list_dgh.index(i)
+    #             tree1 = list_tree[index]
+    #             size = tree1.size()
+    #             current = tree1.get_node(j)
+    #             if current.is_leaf():
+    #                 LM_cost = 0
+    #                 print(LM_cost)
+    #             else:
+    #                 x = 0
+    #                 a_list = [tree1[node].tag for node in tree1.expand_tree(nid=current.identifier, mode=Tree.DEPTH)]
+    #                 a_list = a_list[1:]
+    #                 print(a_list)
+    #                 number_of_descendant = len(a_list)
+    #                 LM_cost = float((number_of_descendant - 1) / (size - 1))
+    #                 LM_cost_record = LM_cost * 1 / num_of_QIs
+    #                 total_LM_cost += LM_cost_record
 
     print(total_LM_cost)
     return total_LM_cost
@@ -337,10 +345,13 @@ def LM_Cost_of_a_record(record):
     number_of_dghs = len(list_dgh)
     weight = 1.0 / number_of_dghs
     LM_cost_record = 0
-    for node in record:
-        tree = list_tree[node]
-        lm_val = LM_Cost_of_a_node(tree,node)
-        LM_cost_record += weight * lm_val
+    for node,value in record.items():
+        if node in list_dgh:
+            index = list_dgh.index(node)
+            tree = list_tree[index]
+            node2 = tree.get_node(value)
+            lm_val = LM_Cost_of_a_node(tree,node2)
+            LM_cost_record += weight * lm_val
 
     return LM_cost_record
 
@@ -618,7 +629,7 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
 # print(read_DGHs("DGHs"))
 # cost_MD("adult_small.csv", "adult-random-anonymized.csv", "DGHs")
-cost_LM("adult-anonymized.csv","adult-anonymized.csv", "DGHs" )
+cost_LM("adult_small.csv","adult-random-anonymized.csv", "DGHs" )
 # random_anonymizer('adult_small.csv', "DGHs", 8, 'adult-random-anonymized.csv')
 # clustering_anonymizer('adult_small.csv', "DGHs", 8, 'adult-clustering-anonymized.csv')
 # topdown_anonymizer('adult_small.csv', "DGHs", 10, 'adult-topdown-anonymized.csv')
