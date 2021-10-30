@@ -293,41 +293,6 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
     cost1 = LM_Cost_of_a_table(raw_dataset)
     cost2= LM_Cost_of_a_table(anonymized_dataset)
     total_LM_cost = abs(cost1 - cost2)
-    # total_LM_cost = 0.0
-    # ctr_raw = Counter()
-    # for data in raw_dataset:
-    #     for df, sa in data.items():
-    #         ctr_raw[(df, sa)] += 1
-    #
-    # list_dgh = []
-    # list_tree = []
-    # num_of_QIs = 0
-    # for dgh, tree in DGHs.items():
-    #     list_dgh.append(dgh)
-    #     list_tree.append(tree)
-    #     num_of_QIs += 1
-    # tree1 = Tree()
-    #
-    # LM_cost = 0
-    # for (i, j), k in ctr_raw.items():
-    #     if k != 0:
-    #         if i in list_dgh:
-    #             index = list_dgh.index(i)
-    #             tree1 = list_tree[index]
-    #             size = tree1.size()
-    #             current = tree1.get_node(j)
-    #             if current.is_leaf():
-    #                 LM_cost = 0
-    #                 print(LM_cost)
-    #             else:
-    #                 x = 0
-    #                 a_list = [tree1[node].tag for node in tree1.expand_tree(nid=current.identifier, mode=Tree.DEPTH)]
-    #                 a_list = a_list[1:]
-    #                 print(a_list)
-    #                 number_of_descendant = len(a_list)
-    #                 LM_cost = float((number_of_descendant - 1) / (size - 1))
-    #                 LM_cost_record = LM_cost * 1 / num_of_QIs
-    #                 total_LM_cost += LM_cost_record
 
     print(total_LM_cost)
     return total_LM_cost
