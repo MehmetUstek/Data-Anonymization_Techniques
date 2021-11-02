@@ -643,7 +643,6 @@ def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), 
 
                 #TODO: Number of records
                 subtree = tree.subtree(child_dgh.identifier)
-                successors = child_dgh.successors(tree.identifier)
                 filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
                 data_length = len(filtered)
                 print(data_length)
@@ -656,6 +655,55 @@ def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), 
 
 
         # root_node[dgh]
+
+def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
+    parent = root
+    root_node = root.tag
+    LM_cost_list = []
+    visited_dgh = []
+    for dgh in root_node:
+        if root.data >= k and not dgh in visited_dgh:
+            visited_dgh.append(dgh)
+            # print(root_node[dgh])
+            index = list_dgh.index(dgh)
+            dgh_tree: Tree = list_tree[index]
+            current: Node = dgh_tree.get_node(root_node[dgh])
+            current_node_successors = current.successors(tree_id=dgh_tree.identifier)
+            for child in current_node_successors:
+                child_tag = parent.tag.copy()
+                LMd = LM_Cost_of_a_record(child_tag)
+                child_tag[dgh] = child
+                #TODO: For every attr in child_tag there has to be a subtree.
+                subtree = dgh_tree.subtree(child)
+                filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
+                data_length = len(filtered)
+                # if data_length>k:
+                # print(data_length)
+                child_node = tree.create_node(tag=child_tag, parent=parent, data=data_length)
+                # parent = child_node
+
+                LMDns = LM_Cost_of_a_record(child_tag)
+                cost = abs(LMd - LMDns)
+                # print(cost)
+                # LM_cost_list.append((dgh, cost))
+                # maximum = max(LM_cost_list, key=lambda x: x[1])
+                # print(maximum[1])
+
+                return specialize_a_node1(child_node, k, tree,raw_dataset)
+            # tree.show(key=False)
+
+        else:
+            return tree
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -679,7 +727,12 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     global DGHs
     if not DGHs:
         DGHs = read_DGHs(DGH_folder)
-
+    global list_dgh
+    global list_tree
+    if not (list_dgh and list_tree):
+        for dgh, tree in DGHs.items():
+            list_dgh.append(dgh)
+            list_tree.append(tree)
     anonymized_dataset = []
     # TODO: complete this function.
     tree = Tree()
@@ -693,7 +746,9 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
     tree.create_node(tag=tag_dict, identifier='root', data=data_length)
     root = tree.get_node('root')
-    specialize_a_node(root, tree, raw_dataset= raw_dataset)
+    # specialize_a_node(root, tree, raw_dataset= raw_dataset)
+    tree = specialize_a_node1(root,3,tree, raw_dataset= raw_dataset)
+    tree.show(key=False)
     # print(tree)
 
 
