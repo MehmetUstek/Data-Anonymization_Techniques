@@ -620,6 +620,7 @@ def find_max_LM_improvement(equivalence_class, records_marked_list, raw_dataset)
 
 def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), tree_dgh: Tree = Tree(), raw_dataset = None):
     #TODO: Optimize here.
+    raw_dataset
     if tree_dgh.size() == 0 or not child_dgh.is_leaf(tree_dgh.identifier):
 
         parent = root
@@ -629,7 +630,10 @@ def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), 
             node_identifier = root_node[dgh]
             root_node_of_tree: Node =  tree.get_node(node_identifier)
             print(root_node_of_tree)
-            for child in root_node_of_tree.successors(tree.identifier):
+            subtree1 = tree.subtree(root_node_of_tree.identifier)
+            filtered1 = list(filter(lambda x: x[dgh] in subtree1, raw_dataset))
+            for filter15 in filtered1:
+                child=filter15[dgh]
                 # print(child)
                 child_dgh = tree.get_node(child)
                 child_tag = parent.tag.copy()
@@ -642,6 +646,7 @@ def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), 
                 successors = child_dgh.successors(tree.identifier)
                 filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
                 data_length = len(filtered)
+                print(data_length)
                 child_node = tree_of_root.create_node(tag=child_tag, parent= parent, data= data_length)
                 parent = child_node
                 specialize_a_node(child_node, tree_of_root, child_dgh, tree, filtered)
