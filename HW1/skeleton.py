@@ -618,24 +618,37 @@ def find_max_LM_improvement(equivalence_class, records_marked_list, raw_dataset)
 
 
 
-def specialize_a_node(root: Node, tree_of_root: Tree):
+def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), tree_dgh: Tree = Tree(), raw_dataset = None):
     #TODO: Optimize here.
-    parent = root
-    root_node = root.tag
-    root_num_of_records = root.data
-    for dgh, tree in DGHs.items():
-        node_identifier = root_node[dgh]
-        root_node_of_tree: Node =  tree.get_node(node_identifier)
-        print(root_node_of_tree)
-        for child in root_node_of_tree.successors(tree.identifier):
-            print(child)
-            # child_node = tree.get_node(child)
-            child_tag = parent.tag.copy()
-            # parent_tag[dgh] = child
-            child_tag[dgh] = child
-            # parent.suc
-            child_node = tree_of_root.create_node(tag=child_tag, parent= parent, data= 2)
-            specialize_a_node(child_node, tree_of_root)
+    if tree_dgh.size() == 0 or not child_dgh.is_leaf(tree_dgh.identifier):
+
+        parent = root
+        root_node = root.tag
+        root_num_of_records = root.data
+        for dgh, tree in DGHs.items():
+            node_identifier = root_node[dgh]
+            root_node_of_tree: Node =  tree.get_node(node_identifier)
+            print(root_node_of_tree)
+            for child in root_node_of_tree.successors(tree.identifier):
+                # print(child)
+                child_dgh = tree.get_node(child)
+                child_tag = parent.tag.copy()
+                # parent_tag[dgh] = child
+                child_tag[dgh] = child
+                # parent.suc
+
+                #TODO: Number of records
+                subtree = tree.subtree(child_dgh.identifier)
+                successors = child_dgh.successors(tree.identifier)
+                filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
+                data_length = len(filtered)
+                child_node = tree_of_root.create_node(tag=child_tag, parent= parent, data= data_length)
+                parent = child_node
+                specialize_a_node(child_node, tree_of_root, child_dgh, tree, filtered)
+            tree_of_root.show()
+    else:
+        pass
+
 
         # root_node[dgh]
 
@@ -671,10 +684,12 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     for dgh in DGHs:
         tag_dict[dgh] = 'Any'
     #TODO: Identifier may be number of records.
+
+
     tree.create_node(tag=tag_dict, identifier='root', data=data_length)
     root = tree.get_node('root')
-    specialize_a_node(root, tree)
-    print(tree)
+    specialize_a_node(root, tree, raw_dataset= raw_dataset)
+    # print(tree)
 
 
 
