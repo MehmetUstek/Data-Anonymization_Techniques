@@ -300,8 +300,10 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
 
 def LM_Cost_of_a_node(tree: Tree, node: Node):
     subtree = tree.subtree(node.identifier)
-    number_of_descendants = len(subtree)
-    number_of_total_nodes = len(tree)
+    descendentant_leaves = subtree.leaves(nid=node.identifier)
+    number_of_descendants = len(descendentant_leaves)
+    total_leaves = tree.leaves(nid='Any')
+    number_of_total_nodes = len(total_leaves)
     LM_Cost = (number_of_descendants - 1) / (number_of_total_nodes - 1)
     return LM_Cost
 
@@ -650,6 +652,28 @@ def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), 
         pass
 
         # root_node[dgh]
+def satisfies_k_anon(raw_dataset,child_tag,k: int):
+    lst = []
+    flag = True
+    for x in raw_dataset:
+        for attribute, val in child_tag.items():
+            index1 = list_dgh.index(attribute)
+            dgh_tree1: Tree = list_tree[index1]
+            subtree = dgh_tree1.subtree(val)
+            # if x[attribute] == val:
+            if not x[attribute] in subtree:
+                flag = False
+                break
+        if flag:
+            lst.append(x)
+        else:
+            flag = True
+            break
+    if len(lst) == k and len(lst) + k > len(raw_dataset):
+        return False,[]
+    else:
+        return (len(lst) >=k),lst
+
 
 
 def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
@@ -657,6 +681,7 @@ def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
     root_node = root.tag
     LM_cost_list = []
     visited_dgh = []
+    max_cost = 0.0
     for dgh in root_node:
         if root.data[0] >= k:
             # print(root.data)
@@ -672,42 +697,28 @@ def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
                 child_tag[dgh] = child
                 # TODO: For every attr in child_tag there has to be a subtree.
                 lst = []
-                flag = True
-                for x in raw_dataset:
-                    for attribute, val in child_tag.items():
-                        index1 = list_dgh.index(attribute)
-                        dgh_tree1: Tree = list_tree[index1]
-                        subtree = dgh_tree1.subtree(val)
-                        # if x[attribute] == val:
-                        if not x[attribute] in subtree:
-                            flag = False
-                            break
-                    if flag:
-                        lst.append(x)
-                    else:
-                        flag = True
+                satisfies, lst = satisfies_k_anon(raw_dataset,child_tag,k)
+                if satisfies:
+
 
                 # filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
 
-                subtree = dgh_tree.subtree(child)
-                filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
-                # data_length = len(filtered)
-                data_length = len(lst)
-                # if data_length>k:
-                # print(data_length)
-                LMDns = LM_Cost_of_a_record(child_tag)
-                cost = abs(LMd - LMDns)
-                child_node = tree.create_node(tag=child_tag, parent=parent, data=(data_length,cost))
-                # parent = child_node
-                if child_node.data[0] < k:
-                    tree.remove_node(child_node.identifier)
-
-
-                # print(cost)
-                # LM_cost_list.append((dgh, cost))
-                # maximum = max(LM_cost_list, key=lambda x: x[1])
-                # print(maximum[1])
-                specialize_a_node1(child_node, k, tree, lst)
+                    subtree = dgh_tree.subtree(child)
+                    filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
+                    # data_length = len(filtered)
+                    data_length = len(lst)
+                    # if data_length>k:
+                    # print(data_length)
+                    LMDns = LM_Cost_of_a_record(child_tag)
+                    cost = abs(LMd - LMDns)
+                    if cost >= max_cost:
+                        max_cost = cost
+                        # print(child_tag)
+                        child_node = tree.create_node(tag=child_tag, parent=parent, data=(data_length,cost))
+                        # parent = child_node
+                        if child_node.data[0] < k:
+                            tree.remove_node(child_node.identifier)
+                        specialize_a_node1(child_node, k, tree, lst)
                 # if not specialize_a_node1(child_node, k, tree,lst):
                 #     tree.remove_node(child_node.identifier)
                 # tree.show(key=False)
