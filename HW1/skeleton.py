@@ -674,9 +674,30 @@ def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
                 LMd = LM_Cost_of_a_record(child_tag)
                 child_tag[dgh] = child
                 #TODO: For every attr in child_tag there has to be a subtree.
+                lst = []
+                flag = True
+                for x in raw_dataset:
+                    for attribute, val in child_tag.items():
+                        index1 = list_dgh.index(attribute)
+                        dgh_tree1: Tree = list_tree[index1]
+                        subtree = dgh_tree1.subtree(val)
+                        # if x[attribute] == val:
+                        if not x[attribute] in subtree:
+                            flag = False
+                            break
+                    if flag:
+                        lst.append(x)
+                    else:
+                        flag = True
+
+
+
+                # filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
+
                 subtree = dgh_tree.subtree(child)
                 filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
-                data_length = len(filtered)
+                # data_length = len(filtered)
+                data_length = len(lst)
                 # if data_length>k:
                 # print(data_length)
                 child_node = tree.create_node(tag=child_tag, parent=parent, data=data_length)
@@ -689,8 +710,8 @@ def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
                 # maximum = max(LM_cost_list, key=lambda x: x[1])
                 # print(maximum[1])
 
-                return specialize_a_node1(child_node, k, tree,raw_dataset)
-            # tree.show(key=False)
+                specialize_a_node1(child_node, k, tree,lst)
+            tree.show(key=False)
 
         else:
             return tree
