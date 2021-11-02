@@ -613,7 +613,32 @@ def topdown_split(raw_dataset, k: int, DGH_folder: str, DGHs, anonymized_dataset
         anonymized_dataset.append(item)
 
     return anonymized_dataset
-def find_max_LM_improvement(equivalence_class,):
+def find_max_LM_improvement(equivalence_class, records_marked_list, raw_dataset):
+    pass
+
+
+
+def specialize_a_node(root: Node, tree_of_root: Tree):
+    #TODO: Optimize here.
+    parent = root
+    root_node = root.tag
+    root_num_of_records = root.data
+    for dgh, tree in DGHs.items():
+        node_identifier = root_node[dgh]
+        root_node_of_tree: Node =  tree.get_node(node_identifier)
+        print(root_node_of_tree)
+        for child in root_node_of_tree.successors(tree.identifier):
+            print(child)
+            # child_node = tree.get_node(child)
+            child_tag = parent.tag.copy()
+            # parent_tag[dgh] = child
+            child_tag[dgh] = child
+            # parent.suc
+            child_node = tree_of_root.create_node(tag=child_tag, parent= parent, data= 2)
+            specialize_a_node(child_node, tree_of_root)
+
+        # root_node[dgh]
+
 
 
 def topdown_anonymize(equivalence_class):
@@ -639,13 +664,20 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
     anonymized_dataset = []
     # TODO: complete this function.
-    temp_raw_dataset = raw_dataset
+    tree = Tree()
+    identifier = []
+    data_length = len(raw_dataset)
+    tag_dict = {}
     for dgh in DGHs:
-        for record in temp_raw_dataset:
-            record[dgh] = 'Any'
-    print(temp_raw_dataset)
-    for record in temp_raw_dataset:
-        pass
+        tag_dict[dgh] = 'Any'
+    #TODO: Identifier may be number of records.
+    tree.create_node(tag=tag_dict, identifier='root', data=data_length)
+    root = tree.get_node('root')
+    specialize_a_node(root, tree)
+    print(tree)
+
+
+
 
 
 
