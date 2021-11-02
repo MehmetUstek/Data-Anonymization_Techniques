@@ -410,15 +410,25 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     write_dataset(anonymized_dataset, output_file)
 
 
-def k_anon(equivalence_class, DGHs, counter):
+def k_anon(equivalence_class, DGHs):
+    counter = Counter()
+
+    for dgh in DGHs.keys():
+        old_dgh = ''
+        for item in equivalence_class:
+            if old_dgh != '' and item[dgh] != old_dgh:
+                return False
     least_common = counter.most_common()[-1]
     return least_common[1]
 
 
-def is_k_anon(equivalence_class, k, DGHs, counter):
-    if k_anon(equivalence_class, DGHs, counter) >= k:
-        return True
-    return False
+def is_k_anon(equivalence_class, k, DGHs):
+    for dgh in DGHs.keys():
+        old_dgh = equivalence_class[0][dgh]
+        for item in equivalence_class:
+            if item[dgh] != old_dgh:
+                return False
+    return True
 
 
 def k_anonymity(equivalence_class, k, DGHs):
@@ -567,8 +577,49 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     os.remove('temp_EC1_file.csv')
     os.remove('temp_EC2_file.csv')
 
-def topdown_split():
+def topdown_split(raw_dataset, k: int, DGH_folder: str, DGHs, anonymized_dataset):
+    remainder = int(len(raw_dataset) % k)
+    record_counter = 0
+    max_number_of_records = int(len(raw_dataset) - remainder)
+    record_counter = 0
+
+    records_marked_list = [0 for record in raw_dataset]
+    iteration = 0
+    while records_marked_list.count(0) >= k:
+        rec_index = records_marked_list.index(0)
+        rec = raw_dataset[rec_index]
+        records_marked_list[rec_index] = 1
+        k_records_list = [rec]
+        record_counter += 1
+        for i in range(k - 1):
+            # if iteration == max_number_of_records:
+            #     continue
+            k_records_list, records_marked_list = find_max_LM_improvement(raw_dataset, records_marked_list, k_records_list,
+                                                                DGH_folder, k)
+        k_records_list = k_anonymity(k_records_list, k, DGHs)
+        for item in k_records_list:
+            anonymized_dataset.append(item)
+        iteration += 1
+
+    while records_marked_list.count(0) > 0:
+        rec_index = records_marked_list.index(0)
+        rec = raw_dataset[rec_index]
+        records_marked_list[rec_index] = 1
+        k_records_list.append(rec)
+        record_counter += 1
+    anonymized_dataset = anonymized_dataset[:-k]
+    k_records_list = k_anonymity(k_records_list, k + remainder, DGHs)
+    for item in k_records_list:
+        anonymized_dataset.append(item)
+
+    return anonymized_dataset
+def find_max_LM_improvement(equivalence_class,):
+
+
+def topdown_anonymize(equivalence_class):
+    # Initialize everything at 'Any'
     pass
+
 
 
 def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
@@ -582,10 +633,21 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
         output_file (str): the path to the output dataset file.
     """
     raw_dataset = read_dataset(raw_dataset_file)
-    DGHs = read_DGHs(DGH_folder)
+    global DGHs
+    if not DGHs:
+        DGHs = read_DGHs(DGH_folder)
 
     anonymized_dataset = []
     # TODO: complete this function.
+    temp_raw_dataset = raw_dataset
+    for dgh in DGHs:
+        for record in temp_raw_dataset:
+            record[dgh] = 'Any'
+    print(temp_raw_dataset)
+    for record in temp_raw_dataset:
+        pass
+
+
 
 
 
