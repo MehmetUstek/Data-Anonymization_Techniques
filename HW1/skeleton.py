@@ -291,18 +291,20 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
             list_dgh.append(dgh)
             list_tree.append(tree)
     cost1 = LM_Cost_of_a_table(raw_dataset)
-    cost2= LM_Cost_of_a_table(anonymized_dataset)
+    cost2 = LM_Cost_of_a_table(anonymized_dataset)
     total_LM_cost = abs(cost1 - cost2)
 
     print(total_LM_cost)
     return total_LM_cost
 
+
 def LM_Cost_of_a_node(tree: Tree, node: Node):
     subtree = tree.subtree(node.identifier)
     number_of_descendants = len(subtree)
     number_of_total_nodes = len(tree)
-    LM_Cost = (number_of_descendants - 1) / (number_of_total_nodes-1)
+    LM_Cost = (number_of_descendants - 1) / (number_of_total_nodes - 1)
     return LM_Cost
+
 
 def LM_Cost_of_a_record(record):
     global list_tree
@@ -310,32 +312,22 @@ def LM_Cost_of_a_record(record):
     number_of_dghs = len(list_dgh)
     weight = 1.0 / number_of_dghs
     LM_cost_record = 0
-    for node,value in record.items():
+    for node, value in record.items():
         if node in list_dgh:
             index = list_dgh.index(node)
             tree = list_tree[index]
             node2 = tree.get_node(value)
-            lm_val = LM_Cost_of_a_node(tree,node2)
+            lm_val = LM_Cost_of_a_node(tree, node2)
             LM_cost_record += weight * lm_val
 
     return LM_cost_record
+
 
 def LM_Cost_of_a_table(dataset):
     LM_Cost = 0
     for record in dataset:
         LM_Cost += LM_Cost_of_a_record(record)
     return LM_Cost
-
-
-
-
-
-
-
-
-
-
-
 
 
 def randomly_assign_dataset(raw_dataset, k: int, DGHs):
@@ -577,6 +569,7 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     os.remove('temp_EC1_file.csv')
     os.remove('temp_EC2_file.csv')
 
+
 def topdown_split(raw_dataset, k: int, DGH_folder: str, DGHs, anonymized_dataset):
     remainder = int(len(raw_dataset) % k)
     record_counter = 0
@@ -594,8 +587,9 @@ def topdown_split(raw_dataset, k: int, DGH_folder: str, DGHs, anonymized_dataset
         for i in range(k - 1):
             # if iteration == max_number_of_records:
             #     continue
-            k_records_list, records_marked_list = find_max_LM_improvement(raw_dataset, records_marked_list, k_records_list,
-                                                                DGH_folder, k)
+            k_records_list, records_marked_list = find_max_LM_improvement(raw_dataset, records_marked_list,
+                                                                          k_records_list,
+                                                                          DGH_folder, k)
         k_records_list = k_anonymity(k_records_list, k, DGHs)
         for item in k_records_list:
             anonymized_dataset.append(item)
@@ -613,13 +607,15 @@ def topdown_split(raw_dataset, k: int, DGH_folder: str, DGHs, anonymized_dataset
         anonymized_dataset.append(item)
 
     return anonymized_dataset
+
+
 def find_max_LM_improvement(equivalence_class, records_marked_list, raw_dataset):
     pass
 
 
-
-def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), tree_dgh: Tree = Tree(), raw_dataset = None):
-    #TODO: Optimize here.
+def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), tree_dgh: Tree = Tree(),
+                      raw_dataset=None):
+    # TODO: Optimize here.
     raw_dataset
     if tree_dgh.size() == 0 or not child_dgh.is_leaf(tree_dgh.identifier):
 
@@ -628,12 +624,12 @@ def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), 
         root_num_of_records = root.data
         for dgh, tree in DGHs.items():
             node_identifier = root_node[dgh]
-            root_node_of_tree: Node =  tree.get_node(node_identifier)
+            root_node_of_tree: Node = tree.get_node(node_identifier)
             print(root_node_of_tree)
             subtree1 = tree.subtree(root_node_of_tree.identifier)
             filtered1 = list(filter(lambda x: x[dgh] in subtree1, raw_dataset))
             for filter15 in filtered1:
-                child=filter15[dgh]
+                child = filter15[dgh]
                 # print(child)
                 child_dgh = tree.get_node(child)
                 child_tag = parent.tag.copy()
@@ -641,20 +637,20 @@ def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), 
                 child_tag[dgh] = child
                 # parent.suc
 
-                #TODO: Number of records
+                # TODO: Number of records
                 subtree = tree.subtree(child_dgh.identifier)
                 filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
                 data_length = len(filtered)
                 print(data_length)
-                child_node = tree_of_root.create_node(tag=child_tag, parent= parent, data= data_length)
+                child_node = tree_of_root.create_node(tag=child_tag, parent=parent, data=data_length)
                 parent = child_node
                 specialize_a_node(child_node, tree_of_root, child_dgh, tree, filtered)
             tree_of_root.show()
     else:
         pass
 
-
         # root_node[dgh]
+
 
 def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
     parent = root
@@ -662,7 +658,8 @@ def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
     LM_cost_list = []
     visited_dgh = []
     for dgh in root_node:
-        if root.data >= k and not dgh in visited_dgh:
+        if root.data[0] >= k:
+            # print(root.data)
             visited_dgh.append(dgh)
             # print(root_node[dgh])
             index = list_dgh.index(dgh)
@@ -673,7 +670,7 @@ def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
                 child_tag = parent.tag.copy()
                 LMd = LM_Cost_of_a_record(child_tag)
                 child_tag[dgh] = child
-                #TODO: For every attr in child_tag there has to be a subtree.
+                # TODO: For every attr in child_tag there has to be a subtree.
                 lst = []
                 flag = True
                 for x in raw_dataset:
@@ -690,8 +687,6 @@ def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
                     else:
                         flag = True
 
-
-
                 # filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
 
                 subtree = dgh_tree.subtree(child)
@@ -700,38 +695,35 @@ def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
                 data_length = len(lst)
                 # if data_length>k:
                 # print(data_length)
-                child_node = tree.create_node(tag=child_tag, parent=parent, data=data_length)
-                # parent = child_node
-
                 LMDns = LM_Cost_of_a_record(child_tag)
                 cost = abs(LMd - LMDns)
+                child_node = tree.create_node(tag=child_tag, parent=parent, data=(data_length,cost))
+                # parent = child_node
+                if child_node.data[0] < k:
+                    tree.remove_node(child_node.identifier)
+
+
                 # print(cost)
                 # LM_cost_list.append((dgh, cost))
                 # maximum = max(LM_cost_list, key=lambda x: x[1])
                 # print(maximum[1])
-
-                specialize_a_node1(child_node, k, tree,lst)
-            tree.show(key=False)
+                specialize_a_node1(child_node, k, tree, lst)
+                # if not specialize_a_node1(child_node, k, tree,lst):
+                #     tree.remove_node(child_node.identifier)
+                # tree.show(key=False)
 
         else:
+            # tree.show(key=False)
             return tree
 
 
-
-
-
-
-
-
-
-
-
+def specialize():
+    pass
 
 
 def topdown_anonymize(equivalence_class):
     # Initialize everything at 'Any'
     pass
-
 
 
 def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
@@ -762,22 +754,22 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     tag_dict = {}
     for dgh in DGHs:
         tag_dict[dgh] = 'Any'
-    #TODO: Identifier may be number of records.
+    # TODO: Identifier may be number of records.
 
-
-    tree.create_node(tag=tag_dict, identifier='root', data=data_length)
+    tree.create_node(tag=tag_dict, identifier='root', data=(data_length,0))
     root = tree.get_node('root')
     # specialize_a_node(root, tree, raw_dataset= raw_dataset)
-    tree = specialize_a_node1(root,3,tree, raw_dataset= raw_dataset)
+    specialize_a_node1(root, 3, tree, raw_dataset=raw_dataset)
+    dict = tree.leaves()
+    max_val = 0.0
+    max_item = ""
+    for item in dict:
+        if item.data[1] > max_val:
+            max_val= item.data[1]
+            max_item = item.tag
+    print(max_item)
     tree.show(key=False)
     # print(tree)
-
-
-
-
-
-
-
 
     write_dataset(anonymized_dataset, output_file)
 
