@@ -711,19 +711,21 @@ def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
                     # print(data_length)
                     LMDns = LM_Cost_of_a_record(child_tag)
                     cost = abs(LMd - LMDns)
-                    if cost >= max_cost:
+                    if cost > max_cost:
                         max_cost = cost
                         # print(child_tag)
                         child_node = tree.create_node(tag=child_tag, parent=parent, data=(data_length,cost))
                         # parent = child_node
                         if child_node.data[0] < k:
                             tree.remove_node(child_node.identifier)
-                        specialize_a_node1(child_node, k, tree, lst)
+                        else:
+                            specialize_a_node1(child_node, k, tree, lst)
                 # if not specialize_a_node1(child_node, k, tree,lst):
                 #     tree.remove_node(child_node.identifier)
                 # tree.show(key=False)
 
         else:
+            # anonymized_dataset.append()
             # tree.show(key=False)
             return tree
 
@@ -771,14 +773,14 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     root = tree.get_node('root')
     # specialize_a_node(root, tree, raw_dataset= raw_dataset)
     specialize_a_node1(root, 3, tree, raw_dataset=raw_dataset)
-    dict = tree.leaves()
-    max_val = 0.0
-    max_item = ""
-    for item in dict:
-        if item.data[1] > max_val:
-            max_val= item.data[1]
-            max_item = item.tag
-    print(max_item)
+    dict = tree.nodes
+    # max_val = 0.0
+    # max_item = ""
+    # for item in dict.values():
+    #     if item.data[1] > max_val:
+    #         max_val= item.data[1]
+    #         max_item = item.tag
+    # print(max_item)
     tree.show(key=False)
     # print(tree)
 
