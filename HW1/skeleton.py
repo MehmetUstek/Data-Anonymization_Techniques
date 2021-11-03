@@ -791,9 +791,10 @@ def get_legal_children(root: Node, k: int, tree: Tree, raw_dataset):
             child_tag = root.tag.copy()
             child_tag[dgh] = child
             print(child)
+            #TODO: Will change child_tag to child in here. And changes will follow in k_anonymity.
             child_list.append(child_tag)
         if child_list:
-            satisfies = satisfies_k_anonymity(dataset, child_list, k)
+            satisfies, lst= satisfies_k_anonymity(dataset, child_list, k)
 
             # satisfies, lst = satisfies_k_anon(dataset, child_tag, k)
 
@@ -801,7 +802,7 @@ def get_legal_children(root: Node, k: int, tree: Tree, raw_dataset):
                 # if dgh in children_nodes_dict:
                 #     children_nodes_dict[dgh].append(child_tag)
                 # else:
-                children_nodes_dict[dgh] = child_list
+                children_nodes_dict[dgh] = lst
 
     return children_nodes_dict
 
@@ -828,12 +829,14 @@ def satisfies_k_anonymity(dataset, child_list,k):
             else:
                 flag = True
 
-        dict[iteration] = lst
+        dict[iteration] = (lst,child_tag)
         iteration += 1
+    child_tag_list = []
     for item in dict.values():
-        if len(item) < k:
-            return False
-    return True
+        if len(item[0]) < k:
+            return False,[]
+        child_tag_list.append(item[1])
+    return True, child_tag_list
 
     # return len(lst) >= k, lst
 
@@ -847,9 +850,9 @@ def is_branch_of_the_current_node(child_tag, lst):
             index = list_dgh.index(dgh)
             tree = list_tree[index]
             subtree = tree.subtree(identifier)
-            if not value in subtree:
-                return False
-    return True
+            if value in subtree:
+                return True
+    return False
 
 
 
