@@ -785,32 +785,71 @@ def get_legal_children(root: Node, k: int, tree: Tree, raw_dataset):
         dgh_tree: Tree = list_tree[index]
         current: Node = dgh_tree.get_node(value.identifier)
         current_node_successors = current.successors(tree_id=dgh_tree.identifier)
+        child_list = []
+        dataset = root.data[2]
         for child in current_node_successors:
             child_tag = root.tag.copy()
             child_tag[dgh] = child
             print(child)
-            dataset = root.data[2]
-            satisfies, lst = satisfies_k_anon(dataset, child_tag, k)
+            child_list.append(child_tag)
+        if child_list:
+            satisfies = satisfies_k_anonymity(dataset, child_list, k)
+
+            # satisfies, lst = satisfies_k_anon(dataset, child_tag, k)
 
             if satisfies:
-                if dgh in children_nodes_dict:
-                    children_nodes_dict[dgh].append(child_tag)
-                else:
-                    children_nodes_dict[dgh] = [child_tag]
+                # if dgh in children_nodes_dict:
+                #     children_nodes_dict[dgh].append(child_tag)
+                # else:
+                children_nodes_dict[dgh] = child_list
 
     return children_nodes_dict
 
+def satisfies_k_anonymity(dataset, child_list,k):
+    dict = {}
+
+    flag = True
+    iteration = 0
+    for child_tag in child_list:
+        if not is_branch_of_the_current_node(child_tag,dataset):
+            continue
+        lst = []
+        for x in dataset:
+            for attribute, val in child_tag.items():
+                index1 = list_dgh.index(attribute)
+                dgh_tree1: Tree = list_tree[index1]
+                subtree = dgh_tree1.subtree(val)
+                # if x[attribute] == val:
+                if not x[attribute] in subtree:
+                    flag = False
+                    break
+            if flag:
+                lst.append(x)
+            else:
+                flag = True
+
+        dict[iteration] = lst
+        iteration += 1
+    for item in dict.values():
+        if len(item) < k:
+            return False
+    return True
+
+    # return len(lst) >= k, lst
+
+
+
+
 def is_branch_of_the_current_node(child_tag, lst):
-    # filtered = list(filter(lambda x: x))
     for item in lst:
         for dgh, value in item.items():
             identifier = child_tag[dgh]
             index = list_dgh.index(dgh)
             tree = list_tree[index]
             subtree = tree.subtree(identifier)
-            if value in subtree:
-                return True
-    return False
+            if not value in subtree:
+                return False
+    return True
 
 
 
