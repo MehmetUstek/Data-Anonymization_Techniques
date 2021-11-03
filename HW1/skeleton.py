@@ -653,8 +653,27 @@ def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), 
 
         # root_node[dgh]
 
+def get_data(raw_dataset, child_tag):
+    lst = []
+    flag = True
+    for x in raw_dataset:
+        for attribute, val in child_tag.items():
+            index1 = list_dgh.index(attribute)
+            dgh_tree1: Tree = list_tree[index1]
+            subtree = dgh_tree1.subtree(val)
+            # if x[attribute] == val:
+            if not x[attribute] in subtree:
+                flag = False
+        if flag:
+            lst.append(x)
+        else:
+            flag = True
+    return lst
+
 
 def satisfies_k_anon(raw_dataset, child_tag, k: int):
+    # if not is_branch_of_the_current_node(child_tag, raw_dataset):
+    #     return False, []
     lst = []
     flag = True
     for x in raw_dataset:
@@ -669,12 +688,16 @@ def satisfies_k_anon(raw_dataset, child_tag, k: int):
         if flag:
             lst.append(x)
         else:
-            flag = True
             break
-    if len(lst) == k and len(lst) + k > len(raw_dataset):
-        return False, []
+    if flag:
+        if len(lst) == k and len(lst) + k > len(raw_dataset):
+            return False, []
+        else:
+            return (len(lst) >= k), lst
     else:
-        return (len(lst) >= k), lst
+        return False, []
+
+    # if fl
 
 
 def get_attributes_satisfies_k_anon(root_node):
@@ -756,7 +779,7 @@ def get_legal_children(root: Node, k: int, tree: Tree, raw_dataset):
             print(child)
             dataset = root.data[2]
             satisfies, lst = satisfies_k_anon(dataset, child_tag, k)
-            is_branch_of_the_current_node(child_tag,lst)
+
             if satisfies:
                 # children_nodes.append(child_tag)
                 if dgh in children_nodes_dict:
@@ -776,6 +799,7 @@ def is_branch_of_the_current_node(child_tag, lst):
             subtree = tree.subtree(identifier)
             if value in subtree:
                 return True
+    return False
 
 
 
@@ -802,9 +826,13 @@ def specialize(root: Node, k: int, tree: Tree, raw_dataset):
         children = max_val[0]
         # child_list = specialize_list
         for item in children:
-            child_node = tree.create_node(tag=item, parent=root, data=(6, 0, []))
+            #TODO: Indicate the data
+            lst= get_data(raw_dataset, item)
+            data_length = len(lst)
+
+            child_node = tree.create_node(tag=item, parent=root, data=(data_length, 0, lst))
             specialize(child_node,k, tree, raw_dataset)
-            print("backup")
+
 
 
 
