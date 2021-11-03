@@ -294,7 +294,7 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
     cost2 = LM_Cost_of_a_table(anonymized_dataset)
     total_LM_cost = abs(cost1 - cost2)
 
-    print(total_LM_cost)
+    # print(total_LM_cost)
     return total_LM_cost
 
 
@@ -595,7 +595,7 @@ def get_legal_children(root: Node, k: int):
         for child in current_node_successors:
             child_tag = root.tag.copy()
             child_tag[dgh] = child
-            print(child)
+            # print(child)
             #TODO: Will change child_tag to child in here. And changes will follow in k_anonymity.
             child_list.append((dgh, child))
         if child_list:
@@ -655,7 +655,7 @@ def specialize(root: Node, k: int, tree: Tree, raw_dataset):
     LM_cost_list = []
     child_list = []
     for dgh, specialize_list in children_nodes_dict.items():
-        print(dgh)
+        # print(dgh)
         # TODO: Get LM Cost of splitting data into two.
         ## Filter data into only childs.
         ##
@@ -735,15 +735,7 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
     tree.create_node(tag=tag_dict, identifier='root', data=(data_length, raw_dataset))
     root = tree.get_node('root')
-    specialize(root, 3, tree, raw_dataset=raw_dataset)
-    # print(tree.nodes)
-    # dict = tree.nodes
-    # max_val = 0.0
-    # max_item = ""
-    # for item in dict.values():
-    #     if item.data[1] > max_val:
-    #         max_val= item.data[1]
-    #         max_item = item.tag
+    specialize(root, k, tree, raw_dataset=raw_dataset)
     list = tree.leaves()
     for item in list:
         data = item.data[1]
@@ -751,22 +743,11 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
         tag = item.tag
         for element in data:
             for dgh in element:
-                element[dgh] = tag[dgh]
+                if dgh in list_dgh:
+                    element[dgh] = tag[dgh]
             anonymized_dataset.append(element)
 
-        # str = ""
-        # for element in tag.values():
-        #     str += element + ","
-        # str = str[:-1]
-        # for i in range(data_length):
-        #     anonymized_dataset.append(tag)
-
-        # print(data)
-        # for element in data:
-        #     anonymized_dataset.append(element)
-    # print(max_item)
-    tree.show(key=False)
-    # print(tree)
+    # tree.show(key=False)
 
     write_dataset(anonymized_dataset, output_file)
 
