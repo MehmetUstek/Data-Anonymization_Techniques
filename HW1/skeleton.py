@@ -769,6 +769,7 @@ def specialize(root: Node, k: int, tree: Tree, raw_dataset):
     for dgh, specialize_list in children_nodes_dict.items():
         print(dgh)
         for item in specialize_list:
+            print("backup")
 
 
 
