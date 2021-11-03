@@ -675,6 +675,8 @@ def satisfies_k_anon(raw_dataset, child_tag, k: int):
     # if not is_branch_of_the_current_node(child_tag, raw_dataset):
     #     return False, []
     lst = []
+
+    broke = False
     flag = True
     for x in raw_dataset:
         for attribute, val in child_tag.items():
@@ -688,14 +690,24 @@ def satisfies_k_anon(raw_dataset, child_tag, k: int):
         if flag:
             lst.append(x)
         else:
-            break
-    if flag:
-        if len(lst) == k and len(lst) + k > len(raw_dataset):
+            flag = True
+
+    if len(lst) > k:
+        dataset = raw_dataset.copy()
+        for i in lst:
+            dataset.remove(i)
+        if not satisfies_k_anon(dataset , child_tag, k):
             return False, []
         else:
-            return (len(lst) >= k), lst
+            if len(lst) >= k and len(lst) + k > len(raw_dataset):
+                return False,[]
+            else:
+                return True, lst
+    elif len(lst) == k:
+        return True, lst
     else:
         return False, []
+
 
     # if fl
 
@@ -781,7 +793,6 @@ def get_legal_children(root: Node, k: int, tree: Tree, raw_dataset):
             satisfies, lst = satisfies_k_anon(dataset, child_tag, k)
 
             if satisfies:
-                # children_nodes.append(child_tag)
                 if dgh in children_nodes_dict:
                     children_nodes_dict[dgh].append(child_tag)
                 else:
