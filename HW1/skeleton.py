@@ -572,186 +572,7 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     os.remove('temp_EC2_file.csv')
 
 
-def topdown_split(raw_dataset, k: int, DGH_folder: str, DGHs, anonymized_dataset):
-    remainder = int(len(raw_dataset) % k)
-    record_counter = 0
-    max_number_of_records = int(len(raw_dataset) - remainder)
-    record_counter = 0
-
-    records_marked_list = [0 for record in raw_dataset]
-    iteration = 0
-    while records_marked_list.count(0) >= k:
-        rec_index = records_marked_list.index(0)
-        rec = raw_dataset[rec_index]
-        records_marked_list[rec_index] = 1
-        k_records_list = [rec]
-        record_counter += 1
-        for i in range(k - 1):
-            # if iteration == max_number_of_records:
-            #     continue
-            k_records_list, records_marked_list = find_max_LM_improvement(raw_dataset, records_marked_list,
-                                                                          k_records_list,
-                                                                          DGH_folder, k)
-        k_records_list = k_anonymity(k_records_list, k, DGHs)
-        for item in k_records_list:
-            anonymized_dataset.append(item)
-        iteration += 1
-
-    while records_marked_list.count(0) > 0:
-        rec_index = records_marked_list.index(0)
-        rec = raw_dataset[rec_index]
-        records_marked_list[rec_index] = 1
-        k_records_list.append(rec)
-        record_counter += 1
-    anonymized_dataset = anonymized_dataset[:-k]
-    k_records_list = k_anonymity(k_records_list, k + remainder, DGHs)
-    for item in k_records_list:
-        anonymized_dataset.append(item)
-
-    return anonymized_dataset
-
-
-def find_max_LM_improvement(equivalence_class, records_marked_list, raw_dataset):
-    pass
-
-
-def specialize_a_node(root: Node, tree_of_root: Tree, child_dgh: Node = Node(), tree_dgh: Tree = Tree(),
-                      raw_dataset=None):
-    # TODO: Optimize here.
-    raw_dataset
-    if tree_dgh.size() == 0 or not child_dgh.is_leaf(tree_dgh.identifier):
-
-        parent = root
-        root_node = root.tag
-        root_num_of_records = root.data
-        for dgh, tree in DGHs.items():
-            node_identifier = root_node[dgh]
-            root_node_of_tree: Node = tree.get_node(node_identifier)
-            print(root_node_of_tree)
-            subtree1 = tree.subtree(root_node_of_tree.identifier)
-            filtered1 = list(filter(lambda x: x[dgh] in subtree1, raw_dataset))
-            for filter15 in filtered1:
-                child = filter15[dgh]
-                # print(child)
-                child_dgh = tree.get_node(child)
-                child_tag = parent.tag.copy()
-                # parent_tag[dgh] = child
-                child_tag[dgh] = child
-                # parent.suc
-
-                # TODO: Number of records
-                subtree = tree.subtree(child_dgh.identifier)
-                filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
-                data_length = len(filtered)
-                print(data_length)
-                child_node = tree_of_root.create_node(tag=child_tag, parent=parent, data=data_length)
-                parent = child_node
-                specialize_a_node(child_node, tree_of_root, child_dgh, tree, filtered)
-            tree_of_root.show()
-    else:
-        pass
-
-        # root_node[dgh]
-
-
-
-def satisfies_k_anon(raw_dataset, child_tag, k: int):
-    # if not is_branch_of_the_current_node(child_tag, raw_dataset):
-    #     return False, []
-    lst = []
-
-    broke = False
-    flag = True
-    for x in raw_dataset:
-        for attribute, val in child_tag.items():
-            index1 = list_dgh.index(attribute)
-            dgh_tree1: Tree = list_tree[index1]
-            subtree = dgh_tree1.subtree(val)
-            # if x[attribute] == val:
-            if not x[attribute] in subtree:
-                flag = False
-                break
-        if flag:
-            lst.append(x)
-        else:
-            flag = True
-
-    if len(lst) > k:
-        dataset = raw_dataset.copy()
-        for i in lst:
-            dataset.remove(i)
-        if not satisfies_k_anon(dataset , child_tag, k):
-            return False, []
-        else:
-            if len(lst) >= k and len(lst) + k > len(raw_dataset):
-                return False,[]
-            else:
-                return True, lst
-    elif len(lst) == k:
-        return True, lst
-    else:
-        return False, []
-
-
-    # if fl
-
-
-def get_attributes_satisfies_k_anon(root_node):
-    pass
-    # for dgh in root_node:
-    #     if
-
-
-def specialize_a_node1(root: Node, k: int, tree: Tree, raw_dataset):
-    # TODO: At each recursion step; iterate over attributes, check if any attribute's not
-    # iterable because of k-anonymity. Take these all attributes to list
-    # get every children and assign the LM costs for each of them.
-    # Put every children on that node to a list.
-    # For every children
-    parent = root
-    root_node = root.tag
-    max_cost = 0.0
-    for dgh in root_node:
-
-        if root.data[0] >= k:
-            index = list_dgh.index(dgh)
-            dgh_tree: Tree = list_tree[index]
-            current: Node = dgh_tree.get_node(root_node[dgh])
-            current_node_successors = current.successors(tree_id=dgh_tree.identifier)
-            for child in current_node_successors:
-                child_tag = parent.tag.copy()
-                LMd = LM_Cost_of_a_record(child_tag)
-                child_tag[dgh] = child
-                # TODO: For every attr in child_tag there has to be a subtree.
-                lst = []
-                satisfies, lst = satisfies_k_anon(raw_dataset, child_tag, k)
-                if satisfies:
-                    subtree = dgh_tree.subtree(child)
-                    filtered = list(filter(lambda x: x[dgh] in subtree, raw_dataset))
-                    data_length = len(lst)
-                    LMDns = LM_Cost_of_a_record(child_tag)
-                    cost = abs(LMd - LMDns)
-                    if cost > max_cost:
-                        max_cost = cost
-                        child_node = tree.create_node(tag=child_tag, parent=parent, data=(data_length, cost, lst))
-
-                        if child_node.data[0] < k:
-                            tree.remove_node(child_node.identifier)
-                        else:
-                            specialize_a_node1(child_node, k, tree, lst)
-                        # parent = child_node
-
-                # if not specialize_a_node1(child_node, k, tree,lst):
-                #     tree.remove_node(child_node.identifier)
-                # tree.show(key=False)
-
-        else:
-            # anonymized_dataset.append()
-            # tree.show(key=False)
-            return tree
-
-
-def get_legal_children(root: Node, k: int, tree: Tree, raw_dataset):
+def get_legal_children(root: Node, k: int):
     global list_dgh
     global list_tree
 
@@ -780,12 +601,7 @@ def get_legal_children(root: Node, k: int, tree: Tree, raw_dataset):
         if child_list:
             satisfies, lst = satisfies_k_anonymity(dataset, child_list, k)
 
-            # satisfies, lst = satisfies_k_anon(dataset, child_tag, k)
-
             if satisfies:
-                # if dgh in children_nodes_dict:
-                #     children_nodes_dict[dgh].append(child_tag)
-                # else:
                 children_nodes_dict[dgh] = lst
 
     return children_nodes_dict
@@ -805,10 +621,6 @@ def satisfies_k_anonymity(dataset, child_list,k):
             else:
                 lst.append(x)
 
-            # if flag:
-            #     lst.append(x)
-            # else:
-            #     flag = True
 
         dict[iteration] = (val, lst)
         iteration += 1
@@ -820,9 +632,6 @@ def satisfies_k_anonymity(dataset, child_list,k):
             return False,[]
         child_tag_list.append(item[0])
     return True, child_tag_list
-
-    # return len(lst) >= k, lst
-
 
 
 
@@ -842,7 +651,7 @@ def is_branch_of_the_current_node(child_tag, lst):
 
 
 def specialize(root: Node, k: int, tree: Tree, raw_dataset):
-    children_nodes_dict = get_legal_children(root,k,tree,raw_dataset)
+    children_nodes_dict = get_legal_children(root,k)
     LM_cost_list = []
     child_list = []
     for dgh, specialize_list in children_nodes_dict.items():
@@ -894,12 +703,6 @@ def get_data_length(dataset,dgh, identifier):
 
 
 
-
-def topdown_anonymize(equivalence_class):
-    # Initialize everything at 'Any'
-    pass
-
-
 def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
                        output_file: str):
     """ Top-down anonymization a dataset, given a set of DGHs.
@@ -932,9 +735,6 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
     tree.create_node(tag=tag_dict, identifier='root', data=(data_length, raw_dataset))
     root = tree.get_node('root')
-    # specialize_a_node(root, tree, raw_dataset= raw_dataset)
-    # specialize_a_node1(root, 3, tree, raw_dataset=raw_dataset)
-    # get_legal_children(root, 3, tree, raw_dataset=raw_dataset)
     specialize(root, 3, tree, raw_dataset=raw_dataset)
     # print(tree.nodes)
     # dict = tree.nodes
@@ -944,6 +744,26 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     #     if item.data[1] > max_val:
     #         max_val= item.data[1]
     #         max_item = item.tag
+    list = tree.leaves()
+    for item in list:
+        data = item.data[1]
+        data_length = item.data[0]
+        tag = item.tag
+        for element in data:
+            for dgh in element:
+                element[dgh] = tag[dgh]
+            anonymized_dataset.append(element)
+
+        # str = ""
+        # for element in tag.values():
+        #     str += element + ","
+        # str = str[:-1]
+        # for i in range(data_length):
+        #     anonymized_dataset.append(tag)
+
+        # print(data)
+        # for element in data:
+        #     anonymized_dataset.append(element)
     # print(max_item)
     tree.show(key=False)
     # print(tree)
