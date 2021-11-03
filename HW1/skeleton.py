@@ -755,7 +755,9 @@ def get_legal_children(root: Node, k: int, tree: Tree, raw_dataset):
             child_tag[dgh] = child
             print(child)
             dataset = root.data[2]
-            if satisfies_k_anon(dataset, child_tag, k):
+            satisfies, lst = satisfies_k_anon(dataset, child_tag, k)
+            is_branch_of_the_current_node(child_tag,lst)
+            if satisfies:
                 # children_nodes.append(child_tag)
                 if dgh in children_nodes_dict:
                     children_nodes_dict[dgh].append(child_tag)
@@ -764,12 +766,46 @@ def get_legal_children(root: Node, k: int, tree: Tree, raw_dataset):
 
     return children_nodes_dict
 
+def is_branch_of_the_current_node(child_tag, lst):
+    # filtered = list(filter(lambda x: x))
+    for item in lst:
+        for dgh, value in item.items():
+            identifier = child_tag[dgh]
+            index = list_dgh.index(dgh)
+            tree = list_tree[index]
+            subtree = tree.subtree(identifier)
+            if value in subtree:
+                return True
+
+
+
+
+
 def specialize(root: Node, k: int, tree: Tree, raw_dataset):
     children_nodes_dict = get_legal_children(root,k,tree,raw_dataset)
+    LM_cost_list = []
+    child_list = []
     for dgh, specialize_list in children_nodes_dict.items():
         print(dgh)
-        for item in specialize_list:
+        # TODO: Get LM Cost of splitting data into two.
+        ## Filter data into only childs.
+        ##
+        LMd = LM_Cost_of_a_record(root.tag)
+        LMdns = 0.0
+        for i in specialize_list:
+            LMdns += LM_Cost_of_a_record(i)
+        LM_cost = abs(LMd - LMdns)
+        LM_cost_list.append((specialize_list,LM_cost))
+    if LM_cost_list:
+        max_val = max(LM_cost_list, key= lambda x: x[1])
+
+        children = max_val[0]
+        # child_list = specialize_list
+        for item in children:
+            child_node = tree.create_node(tag=item, parent=root, data=(6, 0, []))
+            specialize(child_node,k, tree, raw_dataset)
             print("backup")
+
 
 
 
