@@ -174,31 +174,29 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
                 and len(raw_dataset[0]) == len(anonymized_dataset[0]))
         DGHs = read_DGHs(DGH_folder)
 
+    return MD_cost_of_a_table(raw_dataset,anonymized_dataset)
+
+def MD_cost_of_a_table(eq1, eq2):
+    #TODO: Gives wrong answers.
+    global list_tree
+    global list_dgh
     total_MD_cost = 0
     ctr_raw = Counter()
-    for data in raw_dataset:
+    for data in eq1:
         for df, sa in data.items():
             ctr_raw[(df, sa)] += 1
 
     ctr_anon = Counter()
-    for data in anonymized_dataset:
+    for data in eq2:
         for df, sa in data.items():
             ctr_anon[(df, sa)] += 1
     ctr_anon.subtract(ctr_raw)
-    filtered = dict(filter(lambda k: k[1] != 0, ctr_anon.items()))
-    # print(filtered)
 
-    global list_dgh
-    global list_tree
     if not (list_dgh and list_tree):
         for dgh, tree in DGHs.items():
             list_dgh.append(dgh)
             list_tree.append(tree)
     tree1 = Tree()
-    MD_list = []
-    # for record in raw_dataset:
-    cost = 0
-    iterator = 0
     while ctr_anon:
         (i, j), k = ctr_anon.popitem()
         if not i in DGHs:
@@ -212,12 +210,9 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
         for z in range(abs(k)):
             for n in nodes_list:
                 if (i, n) in ctr_anon:
-                    # print("b")
                     node2 = tree1.get_node(n)
                     depth2 = node2.data
                     cost = (depth2 - depth1) * ctr_anon[(i, n)]
-                    # del ctr_anon[(i,j)]
-                    # del ctr_anon[(i,n)]
                     if ctr_anon[(i, n)] > 0:
                         ctr_anon[(i, n)] -= 1
                     else:
@@ -228,7 +223,6 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
                     break
 
     return abs(total_MD_cost)
-
 
 def get_the_lowest_common_ancestor_for_two(tree, node1, node2):
     if node1 != node2:
@@ -449,11 +443,12 @@ def k_anonymity(equivalence_class, k, DGHs):
 
 def calculate_dist_of_two_EC(EC1, EC2, DGH_folder: str):
     # Dist
-    temp_EC1_file = 'temp_EC1_file.csv'
-    temp_EC2_file = 'temp_EC2_file.csv'
-    write_dataset(EC1, temp_EC1_file)
-    write_dataset(EC2, temp_EC2_file)
-    dist = cost_MD(temp_EC1_file, temp_EC2_file, DGH_folder)
+    # temp_EC1_file = 'temp_EC1_file.csv'
+    # temp_EC2_file = 'temp_EC2_file.csv'
+    # write_dataset(EC1, temp_EC1_file)
+    # write_dataset(EC2, temp_EC2_file)
+    # dist = cost_MD(temp_EC1_file, temp_EC2_file, DGH_folder)
+    dist = MD_cost_of_a_table(EC1,EC2)
     return dist
 
 
@@ -568,8 +563,8 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     anonymized_dataset = cluster_and_assing_dataset(raw_dataset, k, DGH_folder, DGHs, anonymized_dataset)
 
     write_dataset(anonymized_dataset, output_file)
-    os.remove('temp_EC1_file.csv')
-    os.remove('temp_EC2_file.csv')
+    # os.remove('temp_EC1_file.csv')
+    # os.remove('temp_EC2_file.csv')
 
 
 def get_legal_children(root: Node, k: int):
@@ -595,8 +590,6 @@ def get_legal_children(root: Node, k: int):
         for child in current_node_successors:
             child_tag = root.tag.copy()
             child_tag[dgh] = child
-            # print(child)
-            #TODO: Will change child_tag to child in here. And changes will follow in k_anonymity.
             child_list.append((dgh, child))
         if child_list:
             satisfies, lst = satisfies_k_anonymity(dataset, child_list, k)
@@ -656,9 +649,6 @@ def specialize(root: Node, k: int, tree: Tree, raw_dataset):
     child_list = []
     for dgh, specialize_list in children_nodes_dict.items():
         # print(dgh)
-        # TODO: Get LM Cost of splitting data into two.
-        ## Filter data into only childs.
-        ##
         LMd = LM_Cost_of_a_record(root.tag)
         LMdns = 0.0
         for i in specialize_list:
@@ -674,7 +664,6 @@ def specialize(root: Node, k: int, tree: Tree, raw_dataset):
         dgh_temp = max_val[2]
         # child_list = specialize_list
         for item in children:
-            #TODO: Indicate the data
             identifier = root.tag.copy()
             identifier[dgh_temp] = item
             lst= get_data_length(raw_dataset, dgh_temp, item)
@@ -724,14 +713,12 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
             list_dgh.append(dgh)
             list_tree.append(tree)
     anonymized_dataset = []
-    # TODO: complete this function.
     tree = Tree()
     identifier = []
     data_length = len(raw_dataset)
     tag_dict = {}
     for dgh in DGHs:
         tag_dict[dgh] = 'Any'
-    # TODO: Identifier may be number of records.
 
     tree.create_node(tag=tag_dict, identifier='root', data=(data_length, raw_dataset))
     root = tree.get_node('root')
@@ -753,13 +740,14 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
 
 # print(read_DGHs("DGHs"))
-# cost_MD("adult_small.csv", "adult-random-anonymized.csv", "DGHs")
+cost_md_temp = cost_MD("adult_small.csv", "adult-clustering-anonymized.csv", "DGHs")
+print(cost_md_temp)
 # cost_LM("adult_small.csv","adult-random-anonymized.csv", "DGHs" )
 # random_anonymizer('adult_small.csv', "DGHs", 8, 'adult-random-anonymized.csv')
 # TODO: needs optimization.
 # Takes 36 seconds with k = 10, dataset length = 100
 # clustering_anonymizer('adult_small.csv', "DGHs", 10, 'adult-clustering-anonymized.csv')
-topdown_anonymizer('adult_small.csv', "DGHs", 10, 'adult-topdown-anonymized.csv')
+# topdown_anonymizer('adult_small.csv', "DGHs", 10, 'adult-topdown-anonymized.csv')
 
 # Command line argument handling and calling of respective anonymizer:
 if len(sys.argv) < 6:
