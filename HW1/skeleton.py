@@ -11,6 +11,8 @@ import random
 from _collections import defaultdict
 from treelib import Node, Tree
 from collections import Counter
+# Timeit is imported for calculating the run time.
+# import timeit
 
 from copy import deepcopy
 from typing import Optional
@@ -165,7 +167,7 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
     Returns:
         float: the calculated cost.
     """
-    # TODO: Really need an optimization, as this holds the whole function back by slowing it at least 10 times.
+
     raw_dataset = read_dataset(raw_dataset_file)
     anonymized_dataset = read_dataset(anonymized_dataset_file)
     global DGHs
@@ -178,7 +180,6 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
 
 
 def MD_cost_of_a_table(eq1, eq2):
-    # TODO: Gives wrong answers.
     global list_tree
     global list_dgh
     total_MD_cost = 0
@@ -227,7 +228,6 @@ def MD_cost_of_a_table(eq1, eq2):
                             del ctr_anon[(i, n)]
                         total_MD_cost += cost
                         break
-
 
     return abs(total_MD_cost)
 
@@ -359,7 +359,7 @@ def randomly_assign_dataset(raw_dataset, k: int, DGHs):
     lss = {}
     i = 0
     for dgh in DGHs.keys():
-        print(dgh)
+        # print(dgh)
         lss[i] = dgh
         i += 1
     return dict_of_clustered_records
@@ -406,27 +406,6 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     write_dataset(anonymized_dataset, output_file)
 
 
-def k_anon(equivalence_class, DGHs):
-    counter = Counter()
-
-    for dgh in DGHs.keys():
-        old_dgh = ''
-        for item in equivalence_class:
-            if old_dgh != '' and item[dgh] != old_dgh:
-                return False
-    least_common = counter.most_common()[-1]
-    return least_common[1]
-
-
-def is_k_anon(equivalence_class, k, DGHs):
-    for dgh in DGHs.keys():
-        old_dgh = equivalence_class[0][dgh]
-        for item in equivalence_class:
-            if item[dgh] != old_dgh:
-                return False
-    return True
-
-
 def k_anonymity(equivalence_class, k, DGHs):
     equivalence_class_list = []
     counter = Counter()
@@ -441,7 +420,6 @@ def k_anonymity(equivalence_class, k, DGHs):
     for dgh, tree in DGHs.items():
         eq_list = equivalence_class_list[k * (iteration - 1):k * iteration]
         node = get_the_lowest_common_ancestor(tree, eq_list)
-        # print(node)
         for item in equivalence_class:
             item[dgh] = node.tag
         iteration += 1
@@ -451,11 +429,6 @@ def k_anonymity(equivalence_class, k, DGHs):
 
 def calculate_dist_of_two_EC(EC1, EC2, DGH_folder: str):
     # Dist
-    # temp_EC1_file = 'temp_EC1_file.csv'
-    # temp_EC2_file = 'temp_EC2_file.csv'
-    # write_dataset(EC1, temp_EC1_file)
-    # write_dataset(EC2, temp_EC2_file)
-    # dist = cost_MD(temp_EC1_file, temp_EC2_file, DGH_folder)
     dist = MD_cost_of_a_table(EC1, EC2)
     return dist
 
@@ -473,7 +446,6 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
     index_holder = 0
     for index in index_list:
         rec = raw_dataset[index]
-        # records_marked_list[index] = 1
         EC_dict[index] = k_records_list.copy()
         EC_dict[index].append(rec)
         index_holder += 1
@@ -481,7 +453,6 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
     temp = iter(EC_dict)
     next_index = next(temp)
     for index, equivalence_class1 in EC_dict.items():
-        # if next_index == len(copy_records_marked_list) - 1:
         if next_index == list(EC_dict)[-1]:
             flag = True
             break
@@ -490,14 +461,10 @@ def find_min_dist(raw_dataset, records_marked_list: list, k_records_list: list, 
         equivalence_class2 = EC_dict[next_index]
         dist = calculate_dist_of_two_EC(equivalence_class1, equivalence_class2, DGH_folder)
         list_of_dists.append((index, dist))
-    # if flag:
-    #     min_val = (index, 0)
-    # else:
     if list_of_dists:
         min_val = min(list_of_dists, key=lambda x: x[1])
     else:
         min_val = (index, 0)
-    # index_of_min_val = list_of_dists.index((min_val[0],min_val[1]))
     k_records_list = []
     for item in EC_dict[min_val[0]]:
         k_records_list.append(item)
@@ -522,8 +489,6 @@ def cluster_and_assing_dataset(raw_dataset, k: int, DGH_folder: str, DGHs, anony
         k_records_list = [rec]
         record_counter += 1
         for i in range(k - 1):
-            # if iteration == max_number_of_records:
-            #     continue
             k_records_list, records_marked_list = find_min_dist(raw_dataset, records_marked_list, k_records_list,
                                                                 DGH_folder, k)
         k_records_list = k_anonymity(k_records_list, k, DGHs)
@@ -561,18 +526,9 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
         DGHs = read_DGHs(DGH_folder)
 
     anonymized_dataset = []
-
-    # dist = calculate_dist_of_two_EC("", "", DGH_folder)
-    # dict_of_clustered_records = cluster_and_assing_dataset(raw_dataset, k, DGH_folder)
-    # for equivalence_class in dict_of_clustered_records.values():
-    #     equivalence_class = k_anonymity(equivalence_class, k, DGHs)
-    #     for item in equivalence_class:
-    #         anonymized_dataset.append(item)
     anonymized_dataset = cluster_and_assing_dataset(raw_dataset, k, DGH_folder, DGHs, anonymized_dataset)
 
     write_dataset(anonymized_dataset, output_file)
-    # os.remove('temp_EC1_file.csv')
-    # os.remove('temp_EC2_file.csv')
 
 
 def get_legal_children(root: Node, k: int):
@@ -617,7 +573,6 @@ def satisfies_k_anonymity(dataset, child_list, k):
             index1 = list_dgh.index(attribute)
             dgh_tree1: Tree = list_tree[index1]
             subtree = dgh_tree1.subtree(val)
-            # if x[attribute] == val:
             if not x[attribute] in subtree:
                 continue
             else:
@@ -650,9 +605,7 @@ def is_branch_of_the_current_node(child_tag, lst):
 def specialize(root: Node, k: int, tree: Tree, raw_dataset):
     children_nodes_dict = get_legal_children(root, k)
     LM_cost_list = []
-    child_list = []
     for dgh, specialize_list in children_nodes_dict.items():
-        # print(dgh)
         LMd = LM_Cost_of_a_record(root.tag)
         LMdns = 0.0
         for i in specialize_list:
@@ -666,7 +619,6 @@ def specialize(root: Node, k: int, tree: Tree, raw_dataset):
 
         children = max_val[0]
         dgh_temp = max_val[2]
-        # child_list = specialize_list
         for item in children:
             identifier = root.tag.copy()
             identifier[dgh_temp] = item
@@ -678,8 +630,6 @@ def specialize(root: Node, k: int, tree: Tree, raw_dataset):
 
 
 def get_data_length(dataset, dgh, identifier):
-    dict = {}
-    iteration = 0
     attribute = dgh
     val = identifier
     lst = []
@@ -687,7 +637,6 @@ def get_data_length(dataset, dgh, identifier):
         index1 = list_dgh.index(attribute)
         dgh_tree1: Tree = list_tree[index1]
         subtree = dgh_tree1.subtree(val)
-        # if x[attribute] == val:
         if not x[attribute] in subtree:
             continue
         else:
@@ -717,7 +666,6 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
             list_tree.append(tree)
     anonymized_dataset = []
     tree = Tree()
-    identifier = []
     data_length = len(raw_dataset)
     tag_dict = {}
     for dgh in DGHs:
@@ -729,7 +677,6 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     list = tree.leaves()
     for item in list:
         data = item.data[1]
-        data_length = item.data[0]
         tag = item.tag
         for element in data:
             for dgh in element:
@@ -737,20 +684,34 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
                     element[dgh] = tag[dgh]
             anonymized_dataset.append(element)
 
-    # tree.show(key=False)
-
     write_dataset(anonymized_dataset, output_file)
 
+# Running the code for analysis.
 
+# start = timeit.default_timer()
 # print(read_DGHs("DGHs"))
-cost_md_temp = cost_MD("adult_small.csv", "adult-clustering-anonymized.csv", "DGHs")
-print(cost_md_temp)
+# cost_md_temp = cost_MD("adult_small.csv", "adult-clustering-anonymized.csv", "DGHs")
+# print(cost_md_temp)
 # cost_LM("adult_small.csv","adult-random-anonymized.csv", "DGHs" )
-# random_anonymizer('adult_small.csv', "DGHs", 8, 'adult-random-anonymized.csv')
-# TODO: needs optimization.
+# 5 seconds with data length 1400.
+# random_anonymizer('adult_small.csv', "DGHs", 80, 'adult-random-anonymized.csv')
+
 # Takes 36 seconds with k = 10, dataset length = 100
-# clustering_anonymizer('adult_small.csv', "DGHs", 10, 'adult-clustering-anonymized.csv')
-# topdown_anonymizer('adult_small.csv', "DGHs", 10, 'adult-topdown-anonymized.csv')
+# 8 minutes to converge.
+# clustering_anonymizer('adult_small.csv', "DGHs", 160, 'adult-clustering-anonymized.csv')
+
+# 25 seconds with data length 1400.
+# topdown_anonymizer('adult_small.csv', "DGHs", 320, 'adult-topdown-anonymized.csv')
+
+# Calculating running time
+# stop = timeit.default_timer()
+# print('Time: ', stop - start)
+
+# Calculating costs
+# cost_md_temp = cost_MD("adult_small.csv", "adult-clustering-anonymized.csv", "DGHs")
+# cost_lm_temp = cost_LM("adult_small.csv","adult-clustering-anonymized.csv", "DGHs" )
+# print("MD:", cost_md_temp)
+# print("LM:", cost_lm_temp)
 
 # Command line argument handling and calling of respective anonymizer:
 if len(sys.argv) < 6:
