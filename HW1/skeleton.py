@@ -174,10 +174,11 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
                 and len(raw_dataset[0]) == len(anonymized_dataset[0]))
         DGHs = read_DGHs(DGH_folder)
 
-    return MD_cost_of_a_table(raw_dataset,anonymized_dataset)
+    return MD_cost_of_a_table(raw_dataset, anonymized_dataset)
+
 
 def MD_cost_of_a_table(eq1, eq2):
-    #TODO: Gives wrong answers.
+    # TODO: Gives wrong answers.
     global list_tree
     global list_dgh
     total_MD_cost = 0
@@ -199,30 +200,37 @@ def MD_cost_of_a_table(eq1, eq2):
     tree1 = Tree()
     while ctr_anon:
         (i, j), k = ctr_anon.popitem()
-        if not i in DGHs:
-            continue
-        index = list_dgh.index(i)
-        tree1 = list_tree[index]
-        current = tree1.get_node(j)
-        depth1 = current.data
+        if k != 0:
+            if not i in DGHs:
+                continue
+            index = list_dgh.index(i)
+            tree1 = list_tree[index]
+            current = tree1.get_node(j)
+            depth1 = current.data
 
-        nodes_list = [tree1[node].tag for node in tree1.expand_tree(mode=Tree.DEPTH)]
-        for z in range(abs(k)):
-            for n in nodes_list:
-                if (i, n) in ctr_anon:
-                    node2 = tree1.get_node(n)
-                    depth2 = node2.data
-                    cost = (depth2 - depth1) * ctr_anon[(i, n)]
-                    if ctr_anon[(i, n)] > 0:
-                        ctr_anon[(i, n)] -= 1
-                    else:
-                        ctr_anon[(i, n)] += 1
-                    if ctr_anon[(i, n)] == 0:
-                        del ctr_anon[(i, n)]
-                    total_MD_cost += cost
-                    break
+            nodes_list = [tree1[node].tag for node in tree1.expand_tree(mode=Tree.DEPTH)]
+            for z in range(abs(k)):
+                for n in nodes_list:
+                    if (i, n) in ctr_anon:
+                        node2 = tree1.get_node(n)
+                        depth2 = node2.data
+                        if k < 0:
+                            cost = -(depth2 - depth1)
+                        else:
+                            cost = (depth2 - depth1)
+                        if ctr_anon[(i, n)] > 0:
+                            ctr_anon[(i, n)] -= 1
+                        else:
+                            ctr_anon[(i, n)] += 1
+
+                        if ctr_anon[(i, n)] == 0:
+                            del ctr_anon[(i, n)]
+                        total_MD_cost += cost
+                        break
+
 
     return abs(total_MD_cost)
+
 
 def get_the_lowest_common_ancestor_for_two(tree, node1, node2):
     if node1 != node2:
@@ -448,7 +456,7 @@ def calculate_dist_of_two_EC(EC1, EC2, DGH_folder: str):
     # write_dataset(EC1, temp_EC1_file)
     # write_dataset(EC2, temp_EC2_file)
     # dist = cost_MD(temp_EC1_file, temp_EC2_file, DGH_folder)
-    dist = MD_cost_of_a_table(EC1,EC2)
+    dist = MD_cost_of_a_table(EC1, EC2)
     return dist
 
 
@@ -599,7 +607,8 @@ def get_legal_children(root: Node, k: int):
 
     return children_nodes_dict
 
-def satisfies_k_anonymity(dataset, child_list,k):
+
+def satisfies_k_anonymity(dataset, child_list, k):
     dict = {}
     iteration = 0
     for attribute, val in child_list:
@@ -614,7 +623,6 @@ def satisfies_k_anonymity(dataset, child_list,k):
             else:
                 lst.append(x)
 
-
         dict[iteration] = (val, lst)
         iteration += 1
     child_tag_list = []
@@ -622,10 +630,9 @@ def satisfies_k_anonymity(dataset, child_list,k):
         if len(item[1]) < k:
             if not item[1]:
                 continue
-            return False,[]
+            return False, []
         child_tag_list.append(item[0])
     return True, child_tag_list
-
 
 
 def is_branch_of_the_current_node(child_tag, lst):
@@ -640,11 +647,8 @@ def is_branch_of_the_current_node(child_tag, lst):
     return False
 
 
-
-
-
 def specialize(root: Node, k: int, tree: Tree, raw_dataset):
-    children_nodes_dict = get_legal_children(root,k)
+    children_nodes_dict = get_legal_children(root, k)
     LM_cost_list = []
     child_list = []
     for dgh, specialize_list in children_nodes_dict.items():
@@ -656,9 +660,9 @@ def specialize(root: Node, k: int, tree: Tree, raw_dataset):
             tag[dgh] = i
             LMdns += LM_Cost_of_a_record(tag)
         LM_cost = abs(LMd - LMdns)
-        LM_cost_list.append((specialize_list,LM_cost, dgh))
+        LM_cost_list.append((specialize_list, LM_cost, dgh))
     if LM_cost_list:
-        max_val = max(LM_cost_list, key= lambda x: x[1])
+        max_val = max(LM_cost_list, key=lambda x: x[1])
 
         children = max_val[0]
         dgh_temp = max_val[2]
@@ -666,14 +670,14 @@ def specialize(root: Node, k: int, tree: Tree, raw_dataset):
         for item in children:
             identifier = root.tag.copy()
             identifier[dgh_temp] = item
-            lst= get_data_length(raw_dataset, dgh_temp, item)
+            lst = get_data_length(raw_dataset, dgh_temp, item)
             data_length = len(lst)
 
             child_node = tree.create_node(tag=identifier, parent=root, data=(data_length, lst))
-            specialize(child_node,k, tree, lst)
+            specialize(child_node, k, tree, lst)
 
 
-def get_data_length(dataset,dgh, identifier):
+def get_data_length(dataset, dgh, identifier):
     dict = {}
     iteration = 0
     attribute = dgh
@@ -689,7 +693,6 @@ def get_data_length(dataset,dgh, identifier):
         else:
             lst.append(x)
     return lst
-
 
 
 def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
